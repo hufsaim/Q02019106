@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cosmic Merge: Stardust - Deep Space</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #020205;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* 화려한 우주 배경 레이어 */
+        #universe-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, #0a0b1e 0%, #020205 100%);
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        /* 성운(Nebula) 효과 */
+        .nebula {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            pointer-events: none;
+            animation: nebula-float 30s infinite alternate ease-in-out;
+        }
+
+        .nebula-1 { background: radial-gradient(circle, #5b21b6, transparent); top: -200px; left: -200px; }
+        .nebula-2 { background: radial-gradient(circle, #1e40af, transparent); bottom: -200px; right: -200px; animation-delay: -15s; }
+        .nebula-3 { background: radial-gradient(circle, #be185d, transparent); top: 30%; left: 40%; width: 400px; height: 400px; opacity: 0.1; }
+
+        @keyframes nebula-float {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(100px, 50px) scale(1.2); }
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        #game-container {
+            position: relative;
+            width: 400px;
+            height: 700px;
+            max-height: 95vh;
+            background: rgba(5, 5, 15, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            border-radius: 40px;
+            box-shadow: 0 0 100px rgba(0, 0, 0, 0.9), inset 0 0 50px rgba(0, 210, 255, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .score-box {
+            font-size: 38px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0, 210, 255, 1);
+            letter-spacing: 4px;
+        }
+
+        .combo-box {
+            font-size: 16px;
+            color: #ff00ff;
+            opacity: 0;
+            font-weight: bold;
+            text-shadow: 0 0 15px #ff00ff;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.5);
+        }
+
+        .combo-box.active {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        #event-notice {
+            position: absolute;
+            top: 130px;
+            width: 100%;
+            text-align: center;
+            color: #ff3e3e;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 15;
+            text-shadow: 0 0 10px #ff3e3e;
+        }
+
+        #next-planet-view {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 75px;
+            height: 85px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 20;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        #next-label { font-size: 9px; color: rgba(255,255,255,0.5); margin-bottom: 5px; letter-spacing: 1px; }
+
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(2, 2, 8, 0.98);
+            padding: 40px;
+            width: 80%;
+            border-radius: 30px;
+            text-align: center;
+            border: 1px solid #00d2ff;
+            box-shadow: 0 0 120px rgba(0, 210, 255, 0.3);
+            display: none;
+            z-index: 100;
+        }
+
+        #drop-line {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 210, 255, 0.6), transparent);
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+        }
+
+        #limit-line {
+            position: absolute;
+            top: 110px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff3e3e, transparent);
+            opacity: 0.8;
+            pointer-events: none;
+            animation: limit-pulse 1.5s infinite;
+        }
+
+        @keyframes limit-pulse {
+            0%, 100% { opacity: 0.4; transform: scaleY(1); }
+            50% { opacity: 1; transform: scaleY(1.5); }
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 14px 35px;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(45deg, #00d2ff, #008fb3);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
+
+        button:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.6);
+        }
+
+        #audio-notice {
+            position: absolute;
+            bottom: 12px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="universe-bg">
+        <div class="nebula nebula-1"></div>
+        <div class="nebula nebula-2"></div>
+        <div class="nebula nebula-3"></div>
+    </div>
+
+    <div id="game-container">
+        <div id="ui-layer">
+            <div class="score-box" id="score">0</div>
+            <div id="combo-display" class="combo-box">COMBO x2</div>
+        </div>
+
+        <div id="event-notice">WARNING: SPACE DEBRIS</div>
+        <div id="limit-line"></div>
+
+        <div id="next-planet-view">
+            <span id="next-label">NEXT</span>
+            <canvas id="next-canvas" width="50" height="50"></canvas>
+        </div>
+
+        <div id="drop-line"></div>
+
+        <div id="message-box">
+            <h2 style="color: #ff3e3e; letter-spacing: 3px; margin: 0; font-size: 20px;">SYSTEM COLLAPSE</h2>
+            <p style="color: #666; font-size: 12px; margin-top: 5px;">Gravity threshold exceeded.</p>
+            <p style="font-size: 32px; margin: 20px 0; font-weight: 700; color: #fff;">SCORE: <span id="final-score" style="color: #00d2ff;">0</span></p>
+            <button onclick="location.reload()">REBOOT UNIVERSE</button>
+        </div>
+        
+        <div id="audio-notice">터치하여 사운드 활성화</div>
+    </div>
+
+    <script>
+        const { Engine, Render, Runner, Bodies, Composite, Events, Body, Vector } = Matter;
+
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playDrop() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(330, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playMerge(index) {
+                if (!this.ctx) return;
+                const baseFreq = 180 + (index * 60);
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, this.ctx.currentTime + 0.6);
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.6);
+            }
+
+            // 장애물 및 이벤트 사운드 업그레이드
+            playEvent(type) {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                
+                if (type === 'debris') {
+                    // 운석 파편 등장 - 무거운 충돌 예고음 (로우파이 붐)
+                    this.createSubBase(60, 1.5, 0.15);
+                    this.createNoiseSweep(false, 1.0, 0.05);
+                } else if (type === 'gravity') {
+                    // 중력 변동 - 우주적 공명음 (페이징 효과 스타일)
+                    this.createSpaceAmbient(220, 330, 2.0, 0.1);
+                } else if (type === 'anomaly') {
+                    // 블랙홀 이상 현상 - 신비롭고 위협적인 고주파 스윕
+                    this.createSpaceAmbient(440, 110, 2.5, 0.08);
+                    this.createNoiseSweep(true, 2.0, 0.04);
+                }
+            }
+
+            createSubBase(freq, duration, volume) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.5, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+
+            createSpaceAmbient(f1, f2, duration, volume) {
+                const osc = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc2.type = 'triangle';
+                osc.frequency.setValueAtTime(f1, this.ctx.currentTime);
+                osc2.frequency.setValueAtTime(f1 * 1.01, this.ctx.currentTime); // 비팅 효과
+                osc.frequency.exponentialRampToValueAtTime(f2, this.ctx.currentTime + duration);
+                osc2.frequency.exponentialRampToValueAtTime(f2 * 1.01, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(0, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc2.start();
+                osc.stop(this.ctx.currentTime + duration);
+                osc2.stop(this.ctx.currentTime + duration);
+            }
+
+            createNoiseSweep(upward, duration, volume) {
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+                
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.Q.value = 1;
+                filter.frequency.setValueAtTime(upward ? 100 : 2000, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(upward ? 2000 : 100, this.ctx.currentTime + duration);
+                
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const PLANETS = [
+            { name: 'Moon', radius: 15, score: 2, colors: ['#95a5a6', '#7f8c8d'], detail: '#6c7a89', glow: 'rgba(255,255,255,0.2)' },
+            { name: 'Mercury', radius: 22, score: 4, colors: ['#b4b4b4', '#8c8c8c'], detail: '#555', glow: 'rgba(180,180,180,0.2)' },
+            { name: 'Mars', radius: 32, score: 8, colors: ['#e74c3c', '#a93226'], detail: '#641e16', glow: 'rgba(231,76,60,0.3)' },
+            { name: 'Venus', radius: 42, score: 16, colors: ['#f8c471', '#d35400'], detail: '#b35c00', glow: 'rgba(248,196,113,0.3)' },
+            { name: 'Earth', radius: 52, score: 32, colors: ['#2e86de', '#1b4f72'], detail: '#27ae60', glow: 'rgba(46,134,222,0.4)', hasClouds: true },
+            { name: 'Neptune', radius: 62, score: 64, colors: ['#4b7bec', '#2d3436'], detail: '#3867d6', glow: 'rgba(75,123,236,0.4)' },
+            { name: 'Uranus', radius: 74, score: 128, colors: ['#81ecec', '#00cec9'], detail: '#ffffff', glow: 'rgba(129,236,236,0.3)' },
+            { name: 'Saturn', radius: 86, score: 256, colors: ['#f7dc6f', '#b7950b'], detail: '#7d6608', glow: 'rgba(247,220,111,0.3)', hasRings: true },
+            { name: 'Jupiter', radius: 100, score: 512, colors: ['#e67e22', '#873600'], detail: '#ffffff', glow: 'rgba(230,126,34,0.3)', isStriped: true },
+            { name: 'Sun', radius: 120, score: 1024, colors: ['#f1c40f', '#d35400'], detail: '#ff0000', glow: 'rgba(255,165,0,0.7)', isStar: true }
+        ];
+
+        let engine, render, runner;
+        let currentPlanetBody = null;
+        let nextIndex = Math.floor(Math.random() * 3);
+        let score = 0;
+        let combo = 0;
+        let lastMergeTime = 0;
+        let isGameOver = false;
+        let canDrop = true;
+
+        const scoreEl = document.getElementById('score');
+        const comboEl = document.getElementById('combo-display');
+        const container = document.getElementById('game-container');
+        const dropLine = document.getElementById('drop-line');
+        const noticeEl = document.getElementById('event-notice');
+
+        function createStars() {
+            const bg = document.getElementById('universe-bg');
+            for (let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 2 + 0.5;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + 'vw';
+                star.style.top = Math.random() * 100 + 'vh';
+                star.style.backgroundColor = Math.random() > 0.8 ? (Math.random() > 0.5 ? '#a5f3fc' : '#fecaca') : '#fff';
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                bg.appendChild(star);
+            }
+        }
+
+        function init() {
+            createStars();
+            engine = Engine.create({ gravity: { y: 1.3 } });
+            
+            render = Render.create({
+                element: container,
+                engine: engine,
+                options: {
+                    width: 400,
+                    height: 700,
+                    wireframes: false,
+                    background: 'transparent'
+                }
+            });
+
+            Events.on(render, 'afterRender', () => {
+                const ctx = render.context;
+                const bodies = Composite.allBodies(engine.world);
+
+                bodies.forEach(body => {
+                    if (body.label === 'debris') {
+                        ctx.save();
+                        ctx.translate(body.position.x, body.position.y);
+                        ctx.rotate(body.angle);
+                        const grad = ctx.createLinearGradient(-15, -15, 15, 15);
+                        grad.addColorStop(0, '#444');
+                        grad.addColorStop(0.5, '#999');
+                        grad.addColorStop(1, '#222');
+                        ctx.fillStyle = grad;
+                        ctx.strokeStyle = '#00d2ff';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(-15, -10); ctx.lineTo(10, -15); ctx.lineTo(15, 5); ctx.lineTo(5, 15); ctx.lineTo(-12, 12);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+                        return;
+                    }
+
+                    if (body.label === 'blackhole') {
+                        ctx.save();
+                        ctx.translate(body.position.x, body.position.y);
+                        const pulse = Math.sin(Date.now() * 0.008) * 10;
+                        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 50 + pulse);
+                        grad.addColorStop(0, '#000');
+                        grad.addColorStop(0.4, '#0a001a');
+                        grad.addColorStop(0.8, '#2d004d');
+                        grad.addColorStop(1, 'transparent');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 50 + pulse, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.strokeStyle = 'rgba(180, 50, 255, 0.5)';
+                        ctx.lineWidth = 3;
+                        ctx.rotate(Date.now() * 0.004);
+                        ctx.beginPath(); ctx.arc(0, 0, 35 + pulse/2, 0, Math.PI * 1.6); ctx.stroke();
+                        ctx.restore();
+                        return;
+                    }
+
+                    if (body.planetIndex === undefined) return;
+                    
+                    const data = PLANETS[body.planetIndex];
+                    const { x, y } = body.position;
+                    const angle = body.angle;
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(angle);
+
+                    // 글로우 효과 강화
+                    const outerGlow = ctx.createRadialGradient(0, 0, data.radius, 0, 0, data.radius * 1.5);
+                    outerGlow.addColorStop(0, data.glow);
+                    outerGlow.addColorStop(1, 'transparent');
+                    ctx.fillStyle = outerGlow;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, data.radius * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (data.hasRings) {
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(247, 220, 111, 0.25)';
+                        ctx.lineWidth = data.radius * 0.15;
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, data.radius * 1.8, data.radius * 0.5, Math.PI / 10, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    const grad = ctx.createRadialGradient(-data.radius * 0.4, -data.radius * 0.4, data.radius * 0.1, 0, 0, data.radius);
+                    grad.addColorStop(0, data.colors[0]);
+                    grad.addColorStop(1, data.colors[1]);
+                    
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, data.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // 디테일 레이어
+                    ctx.globalCompositeOperation = 'overlay';
+                    ctx.globalAlpha = 0.4;
+                    if (data.isStriped) {
+                        for (let i = -5; i < 5; i++) {
+                            ctx.fillStyle = i % 2 === 0 ? '#fff' : '#000';
+                            ctx.fillRect(-data.radius, i * (data.radius / 5), data.radius * 2, data.radius / 10);
+                        }
+                    } else if (data.hasClouds) {
+                        ctx.fillStyle = '#fff';
+                        for (let i = 0; i < 5; i++) {
+                            ctx.beginPath();
+                            ctx.arc(Math.sin(i * 1.2) * data.radius * 0.5, Math.cos(i * 1.2) * data.radius * 0.5, data.radius * 0.35, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+                });
+            });
+
+            const ground = Bodies.rectangle(200, 715, 400, 60, { isStatic: true, friction: 0.8, render: { visible: false } });
+            const left = Bodies.rectangle(-15, 350, 30, 700, { isStatic: true, friction: 0.1, render: { visible: false } });
+            const right = Bodies.rectangle(415, 350, 30, 700, { isStatic: true, friction: 0.1, render: { visible: false } });
+
+            Composite.add(engine.world, [ground, left, right]);
+            Render.run(render);
+            Runner.run(Runner.create(), engine);
+
+            spawnPlanet();
+            
+            container.addEventListener('mousemove', handleMove);
+            container.addEventListener('touchmove', e => { e.preventDefault(); handleMove(e.touches[0]); }, {passive:false});
+            container.addEventListener('mousedown', () => sound.init());
+            container.addEventListener('touchstart', () => sound.init());
+            container.addEventListener('click', dropPlanet);
+
+            Events.on(engine, 'collisionStart', (event) => {
+                event.pairs.forEach(pair => {
+                    const { bodyA, bodyB } = pair;
+                    
+                    // 행성 병합 로직
+                    if (bodyA.planetIndex !== undefined && bodyA.planetIndex === bodyB.planetIndex) {
+                        if (bodyA.isMerging || bodyB.isMerging) return;
+                        merge(bodyA, bodyB);
+                    }
+
+                    // 블랙홀 흡수 로직 추가
+                    if (bodyA.label === 'blackhole' && bodyB.planetIndex !== undefined) {
+                        Composite.remove(engine.world, bodyB);
+                    }
+                    if (bodyB.label === 'blackhole' && bodyA.planetIndex !== undefined) {
+                        Composite.remove(engine.world, bodyA);
+                    }
+                });
+            });
+
+            setInterval(triggerRandomEvent, 12000);
+            gameLoop();
+        }
+
+        function triggerRandomEvent() {
+            if (isGameOver) return;
+            const r = Math.random();
+            
+            if (r < 0.45) {
+                showNotice("WARNING: SPACE DEBRIS");
+                sound.playEvent('debris');
+                const x = Math.random() * 260 + 70;
+                const y = Math.random() * 150 + 250;
+                const debris = Bodies.polygon(x, y, 6, 22, {
+                    isStatic: true,
+                    label: 'debris',
+                    restitution: 0.7,
+                    friction: 0.3,
+                    angle: Math.random() * Math.PI
+                });
+                Composite.add(engine.world, debris);
+                setTimeout(() => Composite.remove(engine.world, debris), 8000);
+            } else if (r < 0.75) {
+                showNotice("ALERT: GRAVITY SHIFT");
+                sound.playEvent('gravity');
+                const drift = (Math.random() - 0.5) * 1.2;
+                engine.gravity.x = drift;
+                setTimeout(() => engine.gravity.x = 0, 7000);
+            } else {
+                showNotice("DANGER: VOID ANOMALY");
+                sound.playEvent('anomaly');
+                const bhX = Math.random() * 200 + 100;
+                const bhY = Math.random() * 150 + 350;
+                const bh = Bodies.circle(bhX, bhY, 15, { isStatic: true, isSensor: true, label: 'blackhole' });
+                Composite.add(engine.world, bh);
+                const attractLoop = setInterval(() => {
+                    const bodies = Composite.allBodies(engine.world);
+                    bodies.forEach(b => {
+                        if (b.planetIndex !== undefined && !b.isStatic) {
+                            const forceVec = Vector.sub(bh.position, b.position);
+                            const dist = Vector.magnitude(forceVec);
+                            if (dist < 280) {
+                                const forceMag = (0.001 * b.mass) * (1 - dist/280);
+                                Body.applyForce(b, b.position, Vector.mult(Vector.normalise(forceVec), forceMag));
+                            }
+                        }
+                    });
+                }, 20);
+                setTimeout(() => {
+                    clearInterval(attractLoop);
+                    Composite.remove(engine.world, bh);
+                }, 6000);
+            }
+        }
+
+        function showNotice(text) {
+            noticeEl.innerText = text;
+            noticeEl.style.opacity = 1;
+            setTimeout(() => noticeEl.style.opacity = 0, 4000);
+        }
+
+        function spawnPlanet() {
+            if (isGameOver) return;
+            const index = nextIndex;
+            nextIndex = Math.floor(Math.random() * 4);
+            updateNextPreview();
+            const data = PLANETS[index];
+            const body = Bodies.circle(200, 70, data.radius, {
+                isStatic: true,
+                render: { visible: false },
+                collisionFilter: { category: 0x0001 }
+            });
+            body.planetIndex = index;
+            currentPlanetBody = body;
+            Composite.add(engine.world, body);
+            canDrop = true;
+        }
+
+        function updateNextPreview() {
+            const canvas = document.getElementById('next-canvas');
+            const ctx = canvas.getContext('2d');
+            const data = PLANETS[nextIndex];
+            ctx.clearRect(0, 0, 50, 50);
+            
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = data.glow;
+            ctx.fillStyle = data.colors[0];
+            ctx.beginPath();
+            ctx.arc(25, 25, 12, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        function handleMove(e) {
+            if (!currentPlanetBody || !canDrop) return;
+            const rect = container.getBoundingClientRect();
+            const scaleX = 400 / rect.width;
+            let x = ((e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 200)) - rect.left) * scaleX;
+            const radius = PLANETS[currentPlanetBody.planetIndex].radius;
+            x = Math.max(radius + 15, Math.min(385 - radius, x));
+            Body.setPosition(currentPlanetBody, { x, y: 70 });
+            dropLine.style.left = (x / scaleX) + 'px';
+        }
+
+        function dropPlanet() {
+            if (!currentPlanetBody || !canDrop) return;
+            canDrop = false;
+            sound.playDrop();
+            Body.setStatic(currentPlanetBody, false);
+            currentPlanetBody = null;
+            setTimeout(spawnPlanet, 850);
+        }
+
+        function merge(bodyA, bodyB) {
+            const index = bodyA.planetIndex;
+            if (index >= PLANETS.length - 1) return;
+            bodyA.isMerging = true;
+            bodyB.isMerging = true;
+            const newIndex = index + 1;
+            const newPos = {
+                x: (bodyA.position.x + bodyB.position.x) / 2,
+                y: (bodyA.position.y + bodyB.position.y) / 2
+            };
+            const data = PLANETS[newIndex];
+            sound.playMerge(newIndex);
+            
+            const newBody = Bodies.circle(newPos.x, newPos.y, data.radius, {
+                render: { visible: false },
+                restitution: 0.5,
+                friction: 0.3,
+                density: 0.0012 * (newIndex + 1)
+            });
+            newBody.planetIndex = newIndex;
+            Composite.remove(engine.world, [bodyA, bodyB]);
+            Composite.add(engine.world, newBody);
+            
+            const now = Date.now();
+            if (now - lastMergeTime < 1800) combo++;
+            else combo = 1;
+            lastMergeTime = now;
+            
+            score += data.score * combo;
+            scoreEl.innerText = score.toLocaleString();
+            if (combo > 1) {
+                comboEl.innerText = `COMBO x${combo}`;
+                comboEl.classList.add('active');
+                setTimeout(() => comboEl.classList.remove('active'), 900);
+            }
+        }
+
+        function gameLoop() {
+            if (isGameOver) return;
+            const bodies = Composite.allBodies(engine.world);
+            bodies.forEach(body => {
+                if (body.planetIndex !== undefined && !body.isStatic) {
+                    if (body.position.y < 110) {
+                        if (!body.warningStart) body.warningStart = Date.now();
+                        if (Date.now() - body.warningStart > 3500) gameOver();
+                    } else {
+                        body.warningStart = null;
+                    }
+                }
+            });
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            document.getElementById('message-box').style.display = 'block';
+            document.getElementById('final-score').innerText = score.toLocaleString();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

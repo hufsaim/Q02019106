@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" width="400" height="220">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="100%" stop-color="#fef3c7"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="220" fill="url(#bg4)" rx="10"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="400" height="32" rx="10" fill="#f59e0b"/>
+  <rect x="0" y="22" width="400" height="10" fill="#f59e0b"/>
+  <text x="200" y="22" font-family="'Segoe UI',sans-serif" font-size="14" font-weight="800" fill="white" text-anchor="middle">HARIBO CRUSH SAGA</text>
+
+  <!-- Grid background -->
+  <rect x="20" y="42" width="264" height="168" rx="8" fill="#fde68a" stroke="#fbbf24" stroke-width="2"/>
+
+  <!-- Gummy Bear Grid 8x5 -->
+  <!-- Row 1 -->
+  <g transform="translate(28,50)">
+    <!-- Red bear -->
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#ef4444"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#ef4444"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#ef4444"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fca5a5"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+    <ellipse cx="16" cy="23" rx="4" ry="2" fill="#fca5a5"/>
+  </g>
+  <g transform="translate(61,50)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#f97316"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#f97316"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#f97316"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fdba74"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+    <ellipse cx="16" cy="23" rx="4" ry="2" fill="#fdba74"/>
+  </g>
+  <g transform="translate(94,50)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#22c55e"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#22c55e"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#22c55e"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#86efac"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+    <ellipse cx="16" cy="23" rx="4" ry="2" fill="#86efac"/>
+  </g>
+  <g transform="translate(127,50)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#ef4444"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#ef4444"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#ef4444"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fca5a5"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+    <ellipse cx="16" cy="23" rx="4" ry="2" fill="#fca5a5"/>
+  </g>
+  <g transform="translate(160,50)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#a855f7"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#a855f7"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#a855f7"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#d8b4fe"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+    <ellipse cx="16" cy="23" rx="4" ry="2" fill="#d8b4fe"/>
+  </g>
+  <g transform="translate(193,50)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#f97316"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#f97316"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#f97316"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fdba74"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+    <ellipse cx="16" cy="23" rx="4" ry="2" fill="#fdba74"/>
+  </g>
+  <g transform="translate(226,50)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#22c55e"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#22c55e"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#22c55e"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#86efac"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+    <ellipse cx="16" cy="23" rx="4" ry="2" fill="#86efac"/>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(28,90)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#a855f7"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#a855f7"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#a855f7"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#d8b4fe"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+  <g transform="translate(61,90)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#ef4444"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#ef4444"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#ef4444"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fca5a5"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+  <!-- Matching highlight (3 orange selected) -->
+  <rect x="88" y="88" width="100" height="40" rx="6" fill="#fbbf24" opacity="0.35" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2"/>
+  <g transform="translate(94,90)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#f97316"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#f97316"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#f97316"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fdba74"/>
+    <circle cx="12" cy="17" r="2" fill="#fff"/><circle cx="20" cy="17" r="2" fill="#fff"/>
+  </g>
+  <g transform="translate(127,90)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#f97316"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#f97316"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#f97316"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fdba74"/>
+    <circle cx="12" cy="17" r="2" fill="#fff"/><circle cx="20" cy="17" r="2" fill="#fff"/>
+  </g>
+  <g transform="translate(160,90)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#f97316"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#f97316"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#f97316"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fdba74"/>
+    <circle cx="12" cy="17" r="2" fill="#fff"/><circle cx="20" cy="17" r="2" fill="#fff"/>
+  </g>
+  <g transform="translate(193,90)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#22c55e"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#22c55e"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#22c55e"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#86efac"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+  <g transform="translate(226,90)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#a855f7"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#a855f7"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#a855f7"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#d8b4fe"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+
+  <!-- Sparkle effects -->
+  <text x="100" y="88" font-size="14" fill="#fbbf24">✦</text>
+  <text x="148" y="86" font-size="16" fill="#f59e0b">★</text>
+  <text x="196" y="88" font-size="14" fill="#fbbf24">✦</text>
+
+  <!-- Side panel -->
+  <rect x="294" y="42" width="88" height="168" rx="8" fill="#fff" stroke="#fbbf24" stroke-width="2"/>
+  <text x="338" y="62" font-family="'Segoe UI',sans-serif" font-size="10" fill="#78350f" text-anchor="middle" font-weight="700">SCORE</text>
+  <text x="338" y="80" font-family="monospace" font-size="16" fill="#f59e0b" text-anchor="middle" font-weight="800">4820</text>
+  <line x1="304" y1="90" x2="372" y2="90" stroke="#fde68a" stroke-width="1"/>
+  <text x="338" y="106" font-family="'Segoe UI',sans-serif" font-size="10" fill="#78350f" text-anchor="middle" font-weight="700">COMBO</text>
+  <text x="338" y="124" font-family="monospace" font-size="18" fill="#ef4444" text-anchor="middle" font-weight="900">x3!</text>
+  <line x1="304" y1="134" x2="372" y2="134" stroke="#fde68a" stroke-width="1"/>
+  <text x="338" y="152" font-size="22" text-anchor="middle">🐻</text>
+  <text x="338" y="175" font-size="22" text-anchor="middle">🐻</text>
+  <text x="338" y="198" font-size="22" text-anchor="middle">🐻</text>
+
+  <!-- Row 3 (partial) -->
+  <g transform="translate(28,130)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#22c55e"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#22c55e"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#22c55e"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#86efac"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+  <g transform="translate(61,130)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#a855f7"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#a855f7"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#a855f7"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#d8b4fe"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+  <g transform="translate(193,130)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#ef4444"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#ef4444"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#ef4444"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#fca5a5"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+  <g transform="translate(226,130)">
+    <ellipse cx="16" cy="20" rx="12" ry="14" fill="#22c55e"/>
+    <ellipse cx="10" cy="10" rx="6" ry="6" fill="#22c55e"/><ellipse cx="22" cy="10" rx="6" ry="6" fill="#22c55e"/>
+    <ellipse cx="16" cy="18" rx="8" ry="10" fill="#86efac"/>
+    <circle cx="12" cy="17" r="2" fill="#1f2937"/><circle cx="20" cy="17" r="2" fill="#1f2937"/>
+  </g>
+</svg>

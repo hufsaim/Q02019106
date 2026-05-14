@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" width="400" height="220">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1e0f"/>
+      <stop offset="100%" stop-color="#1a2e1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="220" fill="url(#bg3)" rx="10"/>
+
+  <!-- Grid lines -->
+  <line x1="0" y1="30" x2="400" y2="30" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="0" y1="60" x2="400" y2="60" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="0" y1="90" x2="400" y2="90" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="0" y1="120" x2="400" y2="120" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="0" y1="150" x2="400" y2="150" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="0" y1="180" x2="400" y2="180" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="30" y1="0" x2="30" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="60" y1="0" x2="60" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="90" y1="0" x2="90" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="120" y1="0" x2="120" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="150" y1="0" x2="150" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="180" y1="0" x2="180" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="210" y1="0" x2="210" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="240" y1="0" x2="240" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="270" y1="0" x2="270" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="300" y1="0" x2="300" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="330" y1="0" x2="330" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+  <line x1="360" y1="0" x2="360" y2="220" stroke="#1f3b1f" stroke-width="1"/>
+
+  <!-- Snake body segments (winding path) -->
+  <!-- Head at right, tail going left -->
+  <!-- Segment: right side going down -->
+  <rect x="302" y="32" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="302" y="62" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="302" y="92" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <!-- Turn left -->
+  <rect x="272" y="92" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="242" y="92" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="212" y="92" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="182" y="92" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <!-- Turn up -->
+  <rect x="182" y="62" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="182" y="32" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <!-- Turn left -->
+  <rect x="152" y="32" width="26" height="26" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="122" y="32" width="26" height="26" rx="6" fill="#4ade80" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="92" y="32" width="26" height="26" rx="6" fill="#4ade80" stroke="#16a34a" stroke-width="1.5"/>
+
+  <!-- Snake Head (at bottom of right column going down) -->
+  <rect x="302" y="122" width="26" height="26" rx="8" fill="#16a34a" stroke="#15803d" stroke-width="2"/>
+  <!-- Eyes -->
+  <circle cx="311" cy="131" r="3.5" fill="white"/>
+  <circle cx="321" cy="131" r="3.5" fill="white"/>
+  <circle cx="312" cy="132" r="1.5" fill="#0f172a"/>
+  <circle cx="322" cy="132" r="1.5" fill="#0f172a"/>
+  <!-- Tongue -->
+  <line x1="315" y1="147" x2="315" y2="153" stroke="#ef4444" stroke-width="2"/>
+  <line x1="315" y1="153" x2="311" y2="158" stroke="#ef4444" stroke-width="2"/>
+  <line x1="315" y1="153" x2="319" y2="158" stroke="#ef4444" stroke-width="2"/>
+
+  <!-- Pill item (white capsule) -->
+  <rect x="62" y="92" width="26" height="14" rx="7" fill="white" stroke="#d1d5db" stroke-width="1"/>
+  <rect x="62" y="92" width="13" height="14" rx="7" fill="#f87171"/>
+
+  <!-- Potion (purple) -->
+  <rect x="32" y="152" width="16" height="22" rx="5" fill="#a855f7"/>
+  <rect x="34" y="148" width="12" height="6" rx="2" fill="#7e22ce"/>
+  <text x="35" y="167" font-size="9" fill="white" font-weight="bold">+3</text>
+
+  <!-- Magnet item -->
+  <path d="M242 155 Q242 143 250 143 Q258 143 258 155" stroke="#3b82f6" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <line x1="242" y1="155" x2="242" y2="162" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+  <line x1="258" y1="155" x2="258" y2="162" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Danger item -->
+  <polygon points="362,148 372,168 352,168" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="360" y="165" font-size="10" fill="white" font-weight="bold">!</text>
+
+  <!-- Score / mode display -->
+  <rect x="20" y="185" width="140" height="22" rx="4" fill="#14532d" opacity="0.8"/>
+  <text x="28" y="200" font-family="monospace" font-size="11" fill="#4ade80">SCORE: 12  BEST: 47</text>
+
+  <!-- Dark mode badge -->
+  <rect x="280" y="185" width="100" height="22" rx="4" fill="#14532d" opacity="0.8"/>
+  <text x="290" y="200" font-family="monospace" font-size="11" fill="#4ade80">🌙 DARK MODE</text>
+</svg>

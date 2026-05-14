@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" width="400" height="220">
+  <defs>
+    <linearGradient id="sky7" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bfdbfe"/>
+      <stop offset="100%" stop-color="#eff6ff"/>
+    </linearGradient>
+    <linearGradient id="ground7" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="nightsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <linearGradient id="road7" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── LEFT PANEL: 과제 피하기 ── -->
+  <rect x="0" y="0" width="196" height="220" rx="10" fill="url(#sky7)"/>
+
+  <!-- Clouds -->
+  <ellipse cx="40" cy="28" rx="22" ry="12" fill="white" opacity="0.9"/>
+  <ellipse cx="55" cy="22" rx="16" ry="10" fill="white" opacity="0.9"/>
+  <ellipse cx="22" cy="24" rx="14" ry="9" fill="white" opacity="0.9"/>
+
+  <ellipse cx="140" cy="38" rx="18" ry="10" fill="white" opacity="0.8"/>
+  <ellipse cx="153" cy="32" rx="13" ry="8" fill="white" opacity="0.8"/>
+
+  <!-- Falling obstacles -->
+  <!-- 과제 (assignment papers) -->
+  <rect x="25" y="55" width="30" height="38" rx="2" fill="white" stroke="#94a3b8" stroke-width="1.5" transform="rotate(-8 25 55)"/>
+  <line x1="30" y1="63" x2="48" y2="61" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="30" y1="68" x2="50" y2="66" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="30" y1="73" x2="48" y2="71" stroke="#94a3b8" stroke-width="1"/>
+  <text x="28" y="88" font-size="8" fill="#ef4444" font-weight="bold" transform="rotate(-8 28 88)">과제</text>
+
+  <rect x="80" y="38" width="28" height="36" rx="2" fill="white" stroke="#94a3b8" stroke-width="1.5" transform="rotate(6 80 38)"/>
+  <line x1="85" y1="46" x2="101" y2="47" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="85" y1="51" x2="103" y2="52" stroke="#94a3b8" stroke-width="1"/>
+  <text x="82" y="70" font-size="7" fill="#ef4444" font-weight="bold" transform="rotate(6 82 70)">팀플</text>
+
+  <!-- 시험지 -->
+  <rect x="140" y="60" width="30" height="40" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" transform="rotate(-5 140 60)"/>
+  <text x="142" y="78" font-size="8" fill="#d97706" font-weight="bold" transform="rotate(-5 142 78)">시험</text>
+  <text x="142" y="90" font-size="8" fill="#d97706" transform="rotate(-5 142 90)">D-1</text>
+
+  <!-- Ground -->
+  <rect x="0" y="185" width="196" height="35" rx="0" fill="url(#ground7)"/>
+  <rect x="0" y="205" width="196" height="15" fill="#15803d"/>
+
+  <!-- Player character (stick figure / simple person) -->
+  <circle cx="100" cy="170" r="10" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+  <!-- Eyes -->
+  <circle cx="97" cy="169" r="1.5" fill="#1f2937"/>
+  <circle cx="103" cy="169" r="1.5" fill="#1f2937"/>
+  <!-- Body -->
+  <line x1="100" y1="180" x2="100" y2="197" stroke="#1e40af" stroke-width="3" stroke-linecap="round"/>
+  <!-- Arms (dodging pose) -->
+  <line x1="100" y1="185" x2="85" y2="178" stroke="#1e40af" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="100" y1="185" x2="118" y2="182" stroke="#1e40af" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Legs -->
+  <line x1="100" y1="197" x2="90" y2="210" stroke="#1e40af" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="100" y1="197" x2="112" y2="210" stroke="#1e40af" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- HP bar -->
+  <rect x="10" y="10" width="60" height="8" rx="4" fill="#e5e7eb"/>
+  <rect x="10" y="10" width="38" height="8" rx="4" fill="#22c55e"/>
+  <text x="10" y="28" font-size="8" fill="#374151" font-weight="bold">HP ▌▌▌▌▌░░</text>
+
+  <!-- F grade effect (near miss) -->
+  <text x="145" y="140" font-size="28" fill="#ef4444" font-weight="900" opacity="0.15">F</text>
+
+  <!-- Panel label -->
+  <rect x="4" y="196" width="72" height="15" rx="3" fill="#1e40af" opacity="0.8"/>
+  <text x="8" y="207" font-size="8" fill="white" font-weight="bold">① 과제 피하기</text>
+
+  <!-- ── DIVIDER ── -->
+  <rect x="194" y="0" width="12" height="220" fill="#0f172a"/>
+  <text x="194" y="115" font-size="11" fill="#64748b" transform="rotate(90 194 115)" text-anchor="middle">CONNECTION LOST...</text>
+
+  <!-- ── RIGHT PANEL: 지각 달리기 ── -->
+  <rect x="206" y="0" width="194" height="220" rx="10" fill="url(#nightsky)"/>
+
+  <!-- Night stars -->
+  <circle cx="220" cy="15" r="1" fill="white" opacity="0.8"/>
+  <circle cx="260" cy="30" r="1.5" fill="white" opacity="0.7"/>
+  <circle cx="300" cy="12" r="1" fill="white" opacity="0.9"/>
+  <circle cx="340" cy="25" r="1" fill="white" opacity="0.6"/>
+  <circle cx="380" cy="18" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="245" cy="50" r="1" fill="white" opacity="0.5"/>
+  <circle cx="370" cy="48" r="1" fill="white" opacity="0.6"/>
+
+  <!-- Building (school/classroom) at far right -->
+  <rect x="340" y="80" width="55" height="105" fill="#1e3a5f" stroke="#334155" stroke-width="1"/>
+  <rect x="348" y="90" width="14" height="18" fill="#fbbf24" opacity="0.6"/> <!-- window lit -->
+  <rect x="368" y="90" width="14" height="18" fill="#fbbf24" opacity="0.4"/>
+  <rect x="348" y="116" width="14" height="18" fill="#fbbf24" opacity="0.7"/>
+  <rect x="368" y="116" width="14" height="18" fill="#fbbf24" opacity="0.5"/>
+  <!-- Door -->
+  <rect x="354" y="160" width="18" height="25" rx="2" fill="#334155"/>
+  <text x="348" y="78" font-size="9" fill="#93c5fd">강의실</text>
+
+  <!-- Road / ground -->
+  <rect x="206" y="185" width="194" height="35" fill="url(#road7)"/>
+  <!-- Road markings -->
+  <rect x="220" y="196" width="20" height="3" rx="1" fill="#6b7280"/>
+  <rect x="258" y="196" width="20" height="3" rx="1" fill="#6b7280"/>
+  <rect x="296" y="196" width="20" height="3" rx="1" fill="#6b7280"/>
+
+  <!-- Running character (dino-style but human) -->
+  <circle cx="265" cy="169" r="10" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+  <circle cx="262" cy="167" r="1.5" fill="#1f2937"/>
+  <circle cx="268" cy="167" r="1.5" fill="#1f2937"/>
+  <!-- Sweat drop -->
+  <ellipse cx="276" cy="163" rx="3" ry="4" fill="#93c5fd" opacity="0.8"/>
+  <!-- Body running -->
+  <line x1="265" y1="179" x2="265" y2="196" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+  <!-- Arms pumping -->
+  <line x1="265" y1="183" x2="252" y2="192" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="265" y1="183" x2="277" y2="176" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Legs running -->
+  <line x1="265" y1="196" x2="252" y2="210" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="265" y1="196" x2="275" y2="208" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Obstacle (trash can / cone) -->
+  <polygon points="308,185 322,185 318,210 312,210" fill="#f59e0b"/>
+  <rect x="306" y="182" width="18" height="5" rx="2" fill="#d97706"/>
+  <!-- Stripes on cone -->
+  <line x1="309" y1="190" x2="320" y2="190" stroke="white" stroke-width="1.5" opacity="0.7"/>
+  <line x1="310" y1="197" x2="319" y2="197" stroke="white" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Progress bar (top right) -->
+  <rect x="214" y="12" width="100" height="8" rx="4" fill="#1e3a5f" stroke="#334155" stroke-width="1"/>
+  <rect x="214" y="12" width="55" height="8" rx="4" fill="#3b82f6"/>
+  <text x="318" y="20" font-size="8" fill="#93c5fd">55%</text>
+  <text x="214" y="10" font-size="7" fill="#64748b">강의실까지</text>
+
+  <!-- Panel label -->
+  <rect x="210" y="196" width="72" height="15" rx="3" fill="#1e40af" opacity="0.8"/>
+  <text x="214" y="207" font-size="8" fill="white" font-weight="bold">② 지각 달리기</text>
+</svg>

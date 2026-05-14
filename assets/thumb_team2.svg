@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" width="400" height="220">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f0c29"/>
+      <stop offset="100%" stop-color="#1a1060"/>
+    </linearGradient>
+    <radialGradient id="ball2" cx="35%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </radialGradient>
+    <linearGradient id="platform" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="220" fill="url(#bg2)" rx="10"/>
+
+  <!-- Grid floor (perspective) -->
+  <!-- Horizontal lines -->
+  <line x1="0" y1="175" x2="400" y2="175" stroke="#6d28d9" stroke-width="0.8" opacity="0.6"/>
+  <line x1="30" y1="165" x2="370" y2="165" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="60" y1="155" x2="340" y2="155" stroke="#6d28d9" stroke-width="0.6" opacity="0.4"/>
+  <line x1="90" y1="147" x2="310" y2="147" stroke="#6d28d9" stroke-width="0.5" opacity="0.35"/>
+  <line x1="115" y1="140" x2="285" y2="140" stroke="#6d28d9" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- Vertical grid lines converging to vanishing point -->
+  <line x1="200" y1="140" x2="0" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="50" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="100" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="150" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="200" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="250" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="300" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="350" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+  <line x1="200" y1="140" x2="400" y2="220" stroke="#6d28d9" stroke-width="0.7" opacity="0.5"/>
+
+  <!-- Platforms -->
+  <rect x="60" y="158" width="80" height="10" rx="3" fill="url(#platform)" opacity="0.9"/>
+  <rect x="260" y="162" width="70" height="10" rx="3" fill="url(#platform)" opacity="0.9"/>
+  <rect x="155" y="140" width="90" height="10" rx="3" fill="url(#platform)" opacity="0.9"/>
+
+  <!-- Platform glow -->
+  <rect x="60" y="162" width="80" height="4" rx="2" fill="#a78bfa" opacity="0.5"/>
+  <rect x="260" y="166" width="70" height="4" rx="2" fill="#a78bfa" opacity="0.5"/>
+  <rect x="155" y="144" width="90" height="4" rx="2" fill="#a78bfa" opacity="0.5"/>
+
+  <!-- Ball shadow -->
+  <ellipse cx="200" cy="137" rx="14" ry="4" fill="#000" opacity="0.5"/>
+
+  <!-- Ball trail -->
+  <circle cx="200" cy="80" r="14" fill="#7c3aed" opacity="0.15"/>
+  <circle cx="200" cy="92" r="14" fill="#7c3aed" opacity="0.2"/>
+  <circle cx="200" cy="104" r="14" fill="#7c3aed" opacity="0.25"/>
+  <circle cx="200" cy="116" r="14" fill="#7c3aed" opacity="0.3"/>
+
+  <!-- Ball -->
+  <circle cx="200" cy="128" r="14" fill="url(#ball2)"/>
+  <circle cx="194" cy="122" r="4" fill="white" opacity="0.7"/>
+
+  <!-- Stars -->
+  <circle cx="40" cy="30" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="80" cy="55" r="1" fill="white" opacity="0.6"/>
+  <circle cx="130" cy="20" r="1.5" fill="white" opacity="0.7"/>
+  <circle cx="280" cy="35" r="1" fill="white" opacity="0.8"/>
+  <circle cx="330" cy="15" r="1.5" fill="white" opacity="0.6"/>
+  <circle cx="360" cy="50" r="1" fill="white" opacity="0.7"/>
+  <circle cx="310" cy="70" r="1" fill="white" opacity="0.5"/>
+  <circle cx="70" cy="90" r="1" fill="white" opacity="0.5"/>
+
+  <!-- 3D label -->
+  <text x="24" y="38" font-family="'Segoe UI', sans-serif" font-size="22" font-weight="900" fill="white" opacity="0.15" letter-spacing="2">3D</text>
+  <text x="22" y="36" font-family="'Segoe UI', sans-serif" font-size="22" font-weight="900" fill="#a78bfa" opacity="0.6" letter-spacing="2">3D</text>
+
+  <!-- Score HUD -->
+  <text x="300" y="30" font-family="monospace" font-size="10" fill="#a78bfa">STAGE 3</text>
+  <text x="300" y="46" font-family="monospace" font-size="10" fill="white">SCORE 8450</text>
+</svg>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PPG Galaga: Pixel Edition</title>
+    <style>
+        @font-face {
+            font-family: 'Arcade';
+            src: url('https://fonts.cdnfonts.com/s/14101/ARCADECLASSIC.woff') format('woff');
+        }
+
+        :root {
+            --blossom: #ff6eb4;
+            --bubbles: #00d2ff;
+            --buttercup: #32cd32;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Arcade', 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            touch-action: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 600px;
+            background: #000;
+            border-left: 4px solid #222;
+            border-right: 4px solid #222;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated; 
+            background: #000511;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            text-shadow: 2px 2px #000;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: calc(100% - 40px);
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .char-grid {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .char-card {
+            background: #111;
+            border: 3px solid #444;
+            padding: 15px;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.1s;
+            border-radius: 8px;
+        }
+
+        .char-card:hover {
+            border-color: #fff;
+            transform: scale(1.05);
+            background: #222;
+        }
+
+        .btn-action {
+            margin-top: 25px;
+            padding: 10px 30px;
+            font-size: 18px;
+            background: #fff;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            pointer-events: auto;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Victory Overlay Specific Styles */
+        .villains-list {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .villain-item {
+            text-align: center;
+        }
+
+        .villain-name {
+            font-size: 10px;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="ui-layer">
+        <div class="header">
+            <div style="color: var(--bubbles);">1UP <span id="scoreVal">00000</span></div>
+            <div style="color: #fff;">STAGE <span id="stageVal">1</span></div>
+        </div>
+        <div class="footer">
+            <div id="livesDisplay" style="color: var(--blossom);">❤❤❤</div>
+        </div>
+    </div>
+
+    <!-- Selection Screen -->
+    <div id="selectionOverlay" class="overlay">
+        <h1 style="color: var(--blossom); font-size: 36px; margin: 0;">PPG PIXEL GALAGA</h1>
+        <p style="color: #888;">SELECT YOUR POWERPUFF GIRL</p>
+        <div class="char-grid">
+            <div class="char-card" onclick="startWith('Blossom')">
+                <canvas id="prev-blossom" width="80" height="80"></canvas>
+                <div style="margin-top:8px; font-size:14px; color:var(--blossom)">BLOSSOM</div>
+            </div>
+            <div class="char-card" onclick="startWith('Bubbles')">
+                <canvas id="prev-bubbles" width="80" height="80"></canvas>
+                <div style="margin-top:8px; font-size:14px; color:var(--bubbles)">BUBBLES</div>
+            </div>
+            <div class="char-card" onclick="startWith('Buttercup')">
+                <canvas id="prev-buttercup" width="80" height="80"></canvas>
+                <div style="margin-top:8px; font-size:14px; color:var(--buttercup)">BUTTERCUP</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage Clear Overlay -->
+    <div id="resultOverlay" class="overlay hidden">
+        <h2 id="resTitle" style="font-size: 30px; color: var(--buttercup);">STAGE CLEAR</h2>
+        <div id="resStats" style="font-size: 16px; line-height: 1.5; margin: 15px;"></div>
+        <button class="btn-action" id="nextBtn">NEXT STAGE</button>
+    </div>
+
+    <!-- Final Victory Overlay (3 Rounds Complete) -->
+    <div id="victoryOverlay" class="overlay hidden">
+        <h1 style="color: var(--gold); font-size: 44px; margin: 0; text-shadow: 4px 4px #f00;">MISSION COMPLETE</h1>
+        
+        <!-- Animated Heroines -->
+        <div style="display: flex; gap: 10px; margin: 20px;">
+             <canvas id="vic-blossom" width="100" height="120"></canvas>
+             <canvas id="vic-bubbles" width="100" height="120"></canvas>
+             <canvas id="vic-buttercup" width="100" height="120"></canvas>
+        </div>
+
+        <!-- Defeated Villains List -->
+        <div style="background: #111; padding: 15px; border-radius: 10px; border: 2px solid #444; width: 80%;">
+            <p style="margin: 0 0 10px 0; color: #aaa; font-size: 14px;">DEFEATED VILLAINS</p>
+            <div class="villains-list">
+                <div class="villain-item">
+                    <canvas id="vic-mojo" width="80" height="80"></canvas>
+                    <div class="villain-name">MOJO JOJO</div>
+                </div>
+                <div class="villain-item">
+                    <canvas id="vic-ameba" width="80" height="80"></canvas>
+                    <div class="villain-name">AMEBA BOYS</div>
+                </div>
+                <div class="villain-item">
+                    <canvas id="vic-sedusa" width="80" height="80"></canvas>
+                    <div class="villain-name">SEDUSA</div>
+                </div>
+            </div>
+        </div>
+
+        <p id="vicScore" style="font-size: 20px; color: #fff; margin-top: 20px;"></p>
+        <button class="btn-action" onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+
+    <!-- Game Over -->
+    <div id="gameOverOverlay" class="overlay hidden">
+        <h1 style="color: #f00; font-size: 40px;">GAME OVER</h1>
+        <p id="finalScore"></p>
+        <button class="btn-action" onclick="location.reload()">RETRY</button>
+    </div>
+</div>
+
+<script>
+/**
+ * Pixel Art Rendering Helper
+ */
+function drawPixelArt(ctx, x, y, pixelData, size = 3) {
+    if (!pixelData || !pixelData.length) return;
+    const rows = pixelData.length;
+    const cols = pixelData.length;
+    const startX = x - (cols * size) / 2;
+    const startY = y - (rows * size) / 2;
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const color = pixelData[r][c];
+            if (color !== null) {
+                ctx.fillStyle = color;
+                ctx.fillRect(startX + c * size, startY + r * size, size, size);
+            }
+        }
+    }
+}
+
+// Pixel Data Assets
+const PIXELS = {
+    HeartBullet: [
+        [null, "#F00", "#F00", null, "#F00", "#F00", null],
+        ["#F00", "#F00", "#F00", "#F00", "#F00", "#F00", "#F00"],
+        ["#F00", "#F00", "#F00", "#F00", "#F00", "#F00", "#F00"],
+        [null, "#F00", "#F00", "#F00", "#F00", "#F00", null],
+        [null, null, "#F00", "#F00", "#F00", null, null],
+        [null, null, null, "#F00", null, null, null]
+    ],
+    MojoUFO: [
+        [null, null, null, "#222", "#222", "#222", "#222", null, null, null],
+        [null, "#5D8A00", "#5D8A00", "#88CC00", "#88CC00", "#88CC00", "#5D8A00", "#5D8A00", null, null],
+        [null, "#88CC00", "#FFF", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", null, null],
+        ["#222", "#222", "#222", "#222", "#222", "#222", "#222", "#222", "#222", "#222"],
+        ["#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00"],
+        ["#88CC00", "#FFF", "#88CC00", "#FFF", "#88CC00", "#FFF", "#88CC00", "#FFF", "#88CC00", "#FFF"],
+        ["#5D8A00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#5D8A00"],
+        [null, null, "#88CC00", null, null, null, null, "#88CC00", null, null],
+        [null, "#88CC00", "#88CC00", null, null, null, null, "#88CC00", "#88CC00", null]
+    ],
+    // Crying versions for victory screen
+    MojoCry: [
+        [null, null, "#222", "#222", "#222", "#222", null, null],
+        [null, "#5D8A00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#5D8A00", null],
+        ["#222", "#222", "#222", "#222", "#222", "#222", "#222", "#222"],
+        ["#88CC00", "#FFF", "#88CC00", "#88CC00", "#88CC00", "#FFF", "#88CC00", "#88CC00"],
+        ["#88CC00", "#00D2FF", "#88CC00", "#5D8A00", "#5D8A00", "#00D2FF", "#88CC00", "#88CC00"],
+        ["#88CC00", "#00D2FF", "#88CC00", "#000", "#000", "#00D2FF", "#88CC00", "#88CC00"],
+        ["#5D8A00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#88CC00", "#5D8A00"]
+    ],
+    Ameba: [
+        [null, null, "#0099FF", "#0099FF", "#0099FF", null, null],
+        [null, "#0099FF", "#70CCFF", "#70CCFF", "#70CCFF", "#0099FF", null],
+        ["#0099FF", "#70CCFF", "#FFF", "#70CCFF", "#FFF", "#70CCFF", "#0099FF"],
+        ["#0099FF", "#70CCFF", "#000", "#70CCFF", "#000", "#70CCFF", "#0099FF"],
+        ["#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF"],
+        ["#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF"],
+        [null, "#0099FF", null, "#0099FF", null, "#0099FF", null]
+    ],
+    AmebaCry: [
+        [null, null, "#0099FF", "#0099FF", "#0099FF", null, null],
+        [null, "#0099FF", "#70CCFF", "#70CCFF", "#70CCFF", "#0099FF", null],
+        ["#0099FF", "#70CCFF", "#FFF", "#70CCFF", "#FFF", "#70CCFF", "#0099FF"],
+        ["#0099FF", "#00D2FF", "#000", "#00D2FF", "#000", "#00D2FF", "#0099FF"],
+        ["#0099FF", "#00D2FF", "#0099FF", "#0099FF", "#0099FF", "#00D2FF", "#0099FF"],
+        ["#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF", "#0099FF"]
+    ],
+    Sedusa: [
+        [null, "#32CD32", null, "#32CD32", null, "#32CD32", null],
+        ["#32CD32", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#32CD32"],
+        [null, "#9D33FF", "#FFF", "#FFF", "#FFF", "#9D33FF", null],
+        ["#32CD32", "#9D33FF", "#FFF", "#32CD32", "#FFF", "#9D33FF", "#32CD32"],
+        [null, "#9D33FF", "#FFF", "#FFF", "#FFF", "#9D33FF", null],
+        ["#32CD32", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#32CD32"],
+        [null, "#32CD32", null, "#32CD32", null, "#32CD32", null]
+    ],
+    SedusaCry: [
+        [null, "#32CD32", null, "#32CD32", null, "#32CD32", null],
+        ["#32CD32", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#32CD32"],
+        [null, "#9D33FF", "#FFF", "#00D2FF", "#FFF", "#9D33FF", null],
+        ["#32CD32", "#9D33FF", "#00D2FF", "#32CD32", "#00D2FF", "#9D33FF", "#32CD32"],
+        [null, "#9D33FF", "#FFF", "#00D2FF", "#FFF", "#9D33FF", null],
+        ["#32CD32", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#9D33FF", "#32CD32"]
+    ],
+    Blossom: [
+        [null, null, null, "#F00", "#F00", "#F00", "#F00", null, null, null],
+        [null, null, "#F00", "#F00", "#F00", "#F00", "#F00", "#F00", null, null],
+        [null, "#F00", "#F00", "#F00", "#F00", "#F00", "#F00", "#F00", "#F00", null],
+        ["#FF8C00", "#FF8C00", "#FF8C00", "#FF8C00", "#FF8C00", "#FF8C00", "#FF8C00", "#FF8C00", "#FF8C00", "#FF8C00"],
+        ["#FF8C00", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FF8C00"],
+        ["#FF8C00", "#FFF", "#FFF", "#FF6EB4", "#FFE0BD", "#FFE0BD", "#FF6EB4", "#FFF", "#FFF", "#FF8C00"],
+        ["#FF8C00", "#FFF", "#000", "#FF6EB4", "#FFE0BD", "#FFE0BD", "#FF6EB4", "#000", "#FFF", "#FF8C00"],
+        ["#FF8C00", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FF8C00"],
+        [null, "#FF8C00", "#FF8C00", "#FF6EB4", "#FF6EB4", "#FF6EB4", "#FF6EB4", "#FF8C00", "#FF8C00", null],
+        [null, null, "#FF8C00", "#000", "#000", "#000", "#000", "#FF8C00", null, null]
+    ],
+    Bubbles: [
+        [null, "#FFD700", "#FFD700", null, null, null, null, "#FFD700", "#FFD700", null],
+        ["#FFD700", "#FFD700", "#FFD700", "#FFD700", "#FFD700", "#FFD700", "#FFD700", "#FFD700", "#FFD700", "#FFD700"],
+        ["#FFD700", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFD700"],
+        ["#FFD700", "#FFF", "#FFF", "#00D2FF", "#FFE0BD", "#FFE0BD", "#00D2FF", "#FFF", "#FFF", "#FFD700"],
+        ["#FFD700", "#FFF", "#000", "#00D2FF", "#FFE0BD", "#FFE0BD", "#00D2FF", "#000", "#FFF", "#FFD700"],
+        ["#FFD700", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFD700"],
+        [null, "#FFD700", "#00D2FF", "#00D2FF", "#00D2FF", "#00D2FF", "#00D2FF", "#00D2FF", "#FFD700", null],
+        [null, null, "#00D2FF", "#000", "#000", "#000", "#000", "#00D2FF", null, null]
+    ],
+    Buttercup: [
+        [null, "#000", "#000", "#000", "#000", "#000", "#000", "#000", "#000", null],
+        ["#000", "#000", "#000", "#000", "#000", "#000", "#000", "#000", "#000", "#000"],
+        ["#000", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#000"],
+        ["#000", "#FFF", "#FFF", "#32CD32", "#FFE0BD", "#FFE0BD", "#32CD32", "#FFF", "#FFF", "#000"],
+        ["#000", "#FFF", "#000", "#32CD32", "#FFE0BD", "#FFE0BD", "#32CD32", "#000", "#FFF", "#000"],
+        ["#000", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#FFE0BD", "#000"],
+        [null, "#000", "#32CD32", "#32CD32", "#32CD32", "#32CD32", "#32CD32", "#32CD32", "#000", null],
+        [null, null, "#32CD32", "#000", "#000", "#000", "#000", "#32CD32", null, null]
+    ]
+};
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let width, height, gameActive = false;
+let score = 0, stage = 1, shots = 0, hits = 0, lives = 3, frameCount = 0;
+let player, enemies = [], bullets = [], enemyBullets = [], stars = [];
+
+class Player {
+    constructor(girl) {
+        this.girl = girl;
+        this.x = width / 2;
+        this.y = height - 100;
+        this.state = 'normal';
+        this.lastShot = 0;
+        this.invincible = 0;
+    }
+    update() {
+        if (this.invincible > 0) this.invincible--;
+        if (this.state === 'normal') {
+            const now = Date.now();
+            if (now - this.lastShot > 250) { this.shoot(); this.lastShot = now; }
+        } else if (this.state === 'capturing') {
+            this.y -= 2.5;
+            if (this.y < height / 4) endGame("납치되었습니다!");
+        }
+        if (this.x < 40) this.x = 40;
+        if (this.x > width - 40) this.x = width - 40;
+    }
+    draw() {
+        if (this.invincible % 10 < 5) drawPixelArt(ctx, this.x, this.y, PIXELS[this.girl], 3.5);
+    }
+    shoot() {
+        bullets.push({ x: this.x, y: this.y - 30, color: (this.girl === 'Blossom' ? "#ff6eb4" : (this.girl === 'Bubbles' ? "#00d2ff" : "#32cd32")) });
+        shots++;
+    }
+    takeDamage() {
+        if (this.invincible > 0) return;
+        lives--;
+        this.invincible = 120;
+        updateUI();
+        if (lives <= 0) endGame("격추되었습니다!");
+    }
+}
+
+class Enemy {
+    constructor(type, gx, gy) {
+        this.isBoss = (type === 2);
+        this.homeX = (width/2 - 180) + gx * 50;
+        this.homeY = 100 + gy * 45;
+        this.x = Math.random() * width;
+        this.y = -100;
+        this.state = 'entering';
+        this.hp = this.isBoss ? 2 : 1;
+        this.beamTimer = 0;
+        
+        if (stage === 1) { this.pixel = PIXELS.MojoUFO; this.bulletColor = "#88CC00"; }
+        else if (stage === 2) { this.pixel = PIXELS.Ameba; this.bulletColor = "#0099FF"; }
+        else { this.pixel = PIXELS.Sedusa; this.bulletColor = "#9D33FF"; }
+    }
+    update() {
+        if (this.state === 'entering') {
+            this.x += (this.homeX - this.x) * 0.05;
+            this.y += (this.homeY - this.y) * 0.05;
+            if (Math.abs(this.x - this.homeX) < 1) this.state = 'formation';
+        } else if (this.state === 'formation') {
+            this.x = this.homeX + Math.sin(frameCount * 0.05) * 30;
+            if (stage >= 2 && Math.random() < 0.005) this.shoot();
+            if (Math.random() < 0.001 + (stage * 0.0002)) this.state = 'diving';
+            if (stage >= 3 && this.isBoss && Math.random() < 0.002 && player.state === 'normal') this.state = 'beam';
+        } else if (this.state === 'diving') {
+            this.y += (4 + stage * 0.5);
+            this.x += Math.sin(this.y * 0.08) * 10;
+            if (player.state === 'normal' && Math.hypot(this.x - player.x, this.y - player.y) < 40) player.takeDamage();
+            if (this.y > height) { this.y = -50; this.state = 'entering'; }
+            if (stage >= 2 && Math.random() < 0.01) this.shoot();
+        } else if (this.state === 'beam') {
+            const ty = player.y - 180;
+            this.x += (player.x - this.x) * 0.08;
+            this.y += (ty - this.y) * 0.08;
+            if (Math.abs(this.y - ty) < 10) {
+                this.beamTimer++;
+                if (this.beamTimer > 150) { this.beamTimer = 0; this.state = 'formation'; }
+            }
+        }
+    }
+    shoot() {
+        const speed = 5 + stage * 0.5;
+        enemyBullets.push({ x: this.x, y: this.y + 10, vy: speed, color: this.bulletColor });
+    }
+    draw() {
+        if (this.state === 'beam' && this.beamTimer > 0) {
+            ctx.fillStyle = this.bulletColor + "44";
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x-60, this.y+400);
+            ctx.lineTo(this.x+60, this.y+400);
+            ctx.fill();
+            if (Math.abs(player.x - this.x) < 40 && player.state === 'normal') player.state = 'capturing';
+        }
+        drawPixelArt(ctx, this.x, this.y, this.pixel, this.isBoss ? 3.5 : 2.5);
+    }
+}
+
+function initStage() {
+    enemies = []; bullets = []; enemyBullets = [];
+    document.getElementById('stageVal').innerText = stage;
+    document.getElementById('scoreVal').innerText = score.toString().padStart(5, '0');
+    const cols = 8;
+    for(let i=0; i<6; i++) enemies.push(new Enemy(2, i+1.5, 0));
+    for(let r=1; r<=3; r++) {
+        for(let i=0; i<cols; i++) enemies.push(new Enemy(0, i, r));
+    }
+}
+
+function startWith(name) {
+    document.getElementById('selectionOverlay').classList.add('hidden');
+    gameActive = true; score = 0; stage = 1; shots = 0; hits = 0; lives = 3;
+    player = new Player(name);
+    stars = Array.from({length: 100}, () => ({x:Math.random()*width, y:Math.random()*height, s:Math.random()*2+1}));
+    initStage();
+    updateUI();
+    requestAnimationFrame(loop);
+}
+
+function update() {
+    if (!gameActive) return;
+    frameCount++;
+    stars.forEach(s => { s.y += s.s; if (s.y > height) s.y = 0; });
+    player.update();
+
+    bullets.forEach((b, i) => {
+        b.y -= 12;
+        if (b.y < -20) bullets.splice(i, 1);
+        else {
+            enemies.forEach((e, ei) => {
+                if (Math.hypot(b.x - e.x, b.y - e.y) < 25) {
+                    e.hp--; bullets.splice(i, 1); hits++;
+                    if (e.hp <= 0) { score += (e.isBoss?400:100); enemies.splice(ei, 1); }
+                    document.getElementById('scoreVal').innerText = score.toString().padStart(5, '0');
+                }
+            });
+        }
+    });
+
+    enemyBullets.forEach((eb, i) => {
+        eb.y += eb.vy;
+        if (eb.y > height + 10) enemyBullets.splice(i, 1);
+        else if (player.state === 'normal' && Math.hypot(eb.x - player.x, eb.y - player.y) < 30) {
+            enemyBullets.splice(i, 1);
+            player.takeDamage();
+        }
+    });
+
+    enemies.forEach(e => e.update());
+    if (enemies.length === 0) stageClear();
+}
+
+function stageClear() {
+    gameActive = false;
+    score += stage * 1000;
+    if (stage === 3) {
+        showFinalVictory();
+    } else {
+        const ov = document.getElementById('resultOverlay');
+        document.getElementById('resStats').innerHTML = `STAGE ${stage} COMPLETE!<br>ACCURACY: ${shots?Math.round(hits/shots*100):0}%<br>BONUS: +${stage*1000}`;
+        ov.classList.remove('hidden');
+        document.getElementById('nextBtn').onclick = () => {
+            ov.classList.add('hidden');
+            stage++; initStage(); gameActive = true; requestAnimationFrame(loop);
+        };
+    }
+}
+
+function showFinalVictory() {
+    const ov = document.getElementById('victoryOverlay');
+    document.getElementById('vicScore').innerText = `TOTAL SCORE: ${score}`;
+    ov.classList.remove('hidden');
+    
+    const vicCanvases = {
+        blossom: document.getElementById('vic-blossom'),
+        bubbles: document.getElementById('vic-bubbles'),
+        buttercup: document.getElementById('vic-buttercup'),
+        mojo: document.getElementById('vic-mojo'),
+        ameba: document.getElementById('vic-ameba'),
+        sedusa: document.getElementById('vic-sedusa')
+    };
+
+    let tick = 0;
+    function animateVictory() {
+        tick++;
+        const jumpY = Math.abs(Math.sin(tick * 0.1)) * 30;
+        const cryingShake = Math.sin(tick * 0.2) * 3;
+        
+        // Heroines Jumping
+        ['Blossom', 'Bubbles', 'Buttercup'].forEach(pName => {
+            const ctxV = vicCanvases[pName.toLowerCase()].getContext('2d');
+            ctxV.clearRect(0,0,100,120);
+            drawPixelArt(ctxV, 50, 80 - jumpY, PIXELS[pName], 4);
+        });
+
+        // Villains Crying
+        const villains = [
+            { id: 'mojo', pixel: 'MojoCry', size: 3.5 },
+            { id: 'ameba', pixel: 'AmebaCry', size: 3.5 },
+            { id: 'sedusa', pixel: 'SedusaCry', size: 3.5 }
+        ];
+
+        villains.forEach(v => {
+            const ctxM = vicCanvases[v.id].getContext('2d');
+            ctxM.clearRect(0,0,80,80);
+            drawPixelArt(ctxM, 40 + cryingShake, 40, PIXELS[v.pixel], v.size);
+        });
+
+        if (!ov.classList.contains('hidden')) requestAnimationFrame(animateVictory);
+    }
+    animateVictory();
+}
+
+function updateUI() {
+    let h = ""; for(let i=0; i<Math.max(0, lives); i++) h += "❤";
+    document.getElementById('livesDisplay').innerText = h;
+}
+
+function endGame(msg) {
+    gameActive = false;
+    document.getElementById('gameOverOverlay').classList.remove('hidden');
+    document.getElementById('finalScore').innerText = `${msg} | SCORE: ${score}`;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = "#FFF";
+    stars.forEach(s => ctx.fillRect(s.x, s.y, 2, 2));
+    enemyBullets.forEach(eb => {
+        ctx.fillStyle = eb.color; ctx.fillRect(eb.x-2, eb.y-4, 4, 8);
+        ctx.fillStyle = "#FFF"; ctx.fillRect(eb.x-1, eb.y-2, 2, 4);
+    });
+    player.draw();
+    bullets.forEach(b => {
+        const heartData = PIXELS.HeartBullet.map(row => row.map(cell => cell === "#F00" ? b.color : cell));
+        drawPixelArt(ctx, b.x, b.y, heartData, 2.5);
+    });
+    enemies.forEach(e => e.draw());
+}
+
+function loop() { if (gameActive) { update(); draw(); requestAnimationFrame(loop); } }
+
+function resize() {
+    width = canvas.width = document.getElementById('game-container').clientWidth;
+    height = canvas.height = document.getElementById('game-container').clientHeight;
+}
+
+window.onload = () => {
+    resize();
+    ['Blossom', 'Bubbles', 'Buttercup'].forEach(n => {
+        const c = document.getElementById(`prev-${n.toLowerCase()}`);
+        drawPixelArt(c.getContext('2d'), 40, 40, PIXELS[n], 4);
+    });
+};
+const move = (ex) => { if (gameActive && player.state === 'normal') {
+    const r = canvas.getBoundingClientRect();
+    player.x = (ex - r.left) * (width / r.width);
+}};
+window.addEventListener('mousemove', e => move(e.clientX));
+window.addEventListener('touchmove', e => { if(e.touches && e.touches) move(e.touches.clientX); e.preventDefault(); }, {passive:false});
+</script>
+</body>
+</html>

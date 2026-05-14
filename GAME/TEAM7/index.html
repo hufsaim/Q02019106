@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>과제 피하기 🎮</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #fdf6e3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: 'Press Start 2P', monospace;
+    overflow: hidden;
+  }
+  #score-board {
+    color: #333;
+    font-size: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 30px;
+    letter-spacing: 1px;
+  }
+  #score-board .label { color: #888; }
+  #score-board span { color: #e74c3c; }
+  #game-wrapper {
+    position: relative;
+    width: 820px;
+    max-width: 97vw;
+  }
+  canvas#c {
+    display: block;
+    background: #fff8e7;
+    border: 4px solid #333;
+    border-radius: 2px;
+    box-shadow: 8px 8px 0 #333;
+    width: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,248,231,0.93);
+    border-radius: 1px;
+  }
+  #overlay h1 {
+    font-size: 16px;
+    color: #e74c3c;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+    text-shadow: 3px 3px 0 #c0392b;
+  }
+  #overlay .sub { font-size: 7px; color: #888; margin-bottom: 18px; letter-spacing: 1px; }
+  #overlay .hint { font-size: 9px; color: #333; animation: blink 0.9s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  #tip { color: #aaa; font-size: 7px; margin-top: 14px; letter-spacing: 1px; }
+
+  /* ── 크롬 화면 공통 ── */
+  #chrome-screen {
+    position: fixed; inset: 0;
+    background: #fff;
+    display: flex; flex-direction: column;
+    font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+    z-index: 999; user-select: none;
+  }
+  #chrome-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: #f1f3f4;
+    border-bottom: 1px solid #dadce0; flex-shrink: 0;
+  }
+  .chrome-dot { width:12px; height:12px; border-radius:50%; }
+  #chrome-urlbar {
+    flex:1; display:flex; align-items:center;
+    background:#fff; border:1px solid #dadce0; border-radius:20px;
+    padding:4px 14px; font-size:13px; color:#202124; gap:6px;
+  }
+  /* ── Phase 1: 타이틀 ── */
+  #phase-title {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:12px;
+  }
+  #phase-title h2 {
+    font-size:26px; font-weight:700; color:#202124;
+    font-family:'Press Start 2P',monospace; letter-spacing:2px;
+  }
+  #phase-title .sub-desc {
+    font-size:12px; color:#70757a; text-align:center; line-height:1.8;
+  }
+  #phase-title .icons {
+    font-size:28px; letter-spacing:8px; margin:4px 0;
+  }
+  #dung-start-btn {
+    margin-top:8px; padding:12px 36px;
+    background:#e74c3c; color:#fff;
+    border:none; border-radius:6px;
+    font-size:14px; font-family:'Press Start 2P',monospace;
+    cursor:pointer; box-shadow:0 4px 0 #c0392b;
+    transition: transform .1s;
+  }
+  #dung-start-btn:active { transform:translateY(3px); box-shadow:0 1px 0 #c0392b; }
+  /* ── Phase 2: 게임 플레이 ── */
+  #phase-game {
+    flex:1; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:8px;
+    background:#1a1a2e;
+  }
+  #phase-game .game-header {
+    display:flex; justify-content:space-between; align-items:center;
+    width:360px; color:#fff;
+    font-family:'Press Start 2P',monospace; font-size:9px;
+  }
+  #dung-canvas {
+    border:3px solid #5d275d;
+    box-shadow:0 0 20px #5d275d88;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+  }
+  /* ── Phase 3: 오프라인 ── */
+  #phase-offline {
+    flex:1; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:6px; padding-bottom:40px;
+  }
+  #phase-offline .err-title { font-size:22px; font-weight:400; color:#202124; margin:10px 0 6px; }
+  #phase-offline .err-sub { font-size:13px; color:#70757a; text-align:center; line-height:1.7; }
+  #phase-offline .err-code { font-size:11px; color:#aaa; margin:8px 0 18px; }
+  #chrome-retry-btn {
+    padding:8px 22px; background:#1a73e8; color:#fff;
+    border:none; border-radius:4px; font-size:13px; cursor:pointer; margin-bottom:20px;
+  }
+  #chrome-retry-btn:hover { background:#1765cc; }
+  #chrome-hint { font-size:11px; color:#bbb; animation:blink2 1.2s step-end infinite; }
+  @keyframes blink2 { 50%{opacity:0;} }
+</style>
+</head>
+<body>
+
+<!-- ══ 크롬 화면 ══ -->
+<div id="chrome-screen">
+  <!-- 주소창 -->
+  <div id="chrome-bar">
+    <div class="chrome-dot" style="background:#ff5f57"></div>
+    <div class="chrome-dot" style="background:#febc2e"></div>
+    <div class="chrome-dot" style="background:#28c840"></div>
+    <div id="chrome-urlbar">
+      <span style="font-size:11px;color:#aaa">🔒</span>
+      <span id="url-text">study-escape.fun/dung-dodge</span>
+    </div>
+  </div>
+
+  <!-- Phase 1: 타이틀 -->
+  <div id="phase-title">
+    <div class="icons">📝 💀 👥 📚</div>
+    <h2>과제 피하기</h2>
+    <div class="sub-desc">
+      하늘에서 쏟아지는 과제·시험·팀플을 피하세요!<br>
+      ← → 키 또는 터치로 이동
+    </div>
+    <button id="dung-start-btn">▶ 시작하기</button>
+  </div>
+
+  <!-- Phase 2: 게임 플레이 -->
+  <div id="phase-game">
+    <div class="game-header">
+      <span>과제 피하기 🎮</span>
+      <span>SCORE <span id="dung-score">0</span></span>
+    </div>
+    <canvas id="dung-canvas" width="360" height="260"></canvas>
+  </div>
+
+  <!-- Phase 3: 오프라인 -->
+  <div id="phase-offline">
+    <canvas id="dino-pixel" width="80" height="56" style="width:80px;height:56px;image-rendering:pixelated"></canvas>
+    <div class="err-title">인터넷에 연결되어 있지 않습니다</div>
+    <div class="err-sub">네트워크 케이블이 연결되어 있는지, 모뎀과 라우터가<br>제대로 작동하는지 확인하세요.</div>
+    <div class="err-code">ERR_INTERNET_DISCONNECTED</div>
+    <button id="chrome-retry-btn">다시 연결</button>
+    <div id="chrome-hint">SPACE 또는 화면을 눌러 강의실로 뛰어가기</div>
+  </div>
+</div>
+
+<div id="score-board">
+  <span class="label">SCORE</span> <span id="score">00000</span>
+  &nbsp;&nbsp;
+  <span class="label">HI</span> <span id="hi">00000</span>
+  &nbsp;&nbsp;
+  <span class="label">지각까지</span> <span id="danger">100%</span>
+</div>
+
+<div id="game-wrapper">
+  <canvas id="c" width="820" height="320"></canvas>
+  <div id="overlay">
+    <h1>🏃 강의실까지 뛰어라!</h1>
+    <div class="sub">eclass 다운... 출석은 직접 해야 한다</div>
+    <div class="hint">[ SPACE / TAP ] 뛰기 시작!</div>
+  </div>
+</div>
+<div id="tip">SPACE / ↑ 점프 &nbsp;|&nbsp; ↓ 숙이기 &nbsp;|&nbsp; D 히트박스 보기</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// ── PHASE 1→2: 똥피하기 게임 ─────────────────────────
+// ══════════════════════════════════════════════════════
+const dc = document.getElementById('dung-canvas');
+let dx; // context는 startDungGame 시점에 초기화
+
+const ITEMS = ['📝','💀','👥','📚','⚠️','🔔'];
+let dungPlayer, dungItems, dungScore, dungRunning, dungRaf;
+let disconnectTimer = 0;
+const DISCONNECT_AFTER = 10000;
+
+document.getElementById('dung-start-btn').addEventListener('click', startDungGame);
+
+function startDungGame() {
+  document.getElementById('phase-title').style.display = 'none';
+  document.getElementById('phase-game').style.display = 'flex';
+  document.getElementById('url-text').textContent = 'study-escape.fun/dung-dodge';
+
+  // 캔버스가 화면에 나타난 후 컨텍스트 초기화
+  dx = dc.getContext('2d');
+  dx.imageSmoothingEnabled = false;
+  const DW = dc.width, DH = dc.height;
+
+  dungPlayer = { x: DW/2 - 16, y: DH - 44, w: 32, h: 32, speed: 5, vx: 0 };
+  dungItems = [];
+  dungScore = 0;
+  dungRunning = true;
+  disconnectTimer = DISCONNECT_AFTER;
+
+  const keys = {};
+  document.addEventListener('keydown', e => { keys[e.code] = true; });
+  document.addEventListener('keyup',   e => { keys[e.code] = false; });
+
+  // 모바일 터치
+  dc.addEventListener('touchstart', e => {
+    const tx = e.touches[0].clientX;
+    const rect = dc.getBoundingClientRect();
+    if (tx < rect.left + rect.width/2) keys['ArrowLeft'] = true;
+    else keys['ArrowRight'] = true;
+  }, {passive:true});
+  dc.addEventListener('touchend', () => {
+    keys['ArrowLeft'] = false; keys['ArrowRight'] = false;
+  });
+
+  let lastTime = 0, itemTimer = 0;
+  let hitFlash = 0; // 맞았을 때 성적표 표시 타이머 (ms)
+  let hitItem = '';  // 맞은 아이템
+
+  function drawReportCard() {
+    // 성적표 팝업
+    const cw = 180, ch = 130;
+    const cx = (DW - cw) / 2, cy = (DH - ch) / 2;
+    // 배경
+    dx.fillStyle = 'rgba(0,0,0,0.55)';
+    dx.fillRect(0, 0, DW, DH);
+    // 카드
+    dx.fillStyle = '#fffde7';
+    dx.fillRect(cx, cy, cw, ch);
+    dx.strokeStyle = '#e74c3c';
+    dx.lineWidth = 3;
+    dx.strokeRect(cx, cy, cw, ch);
+    dx.strokeStyle = '#333';
+    dx.lineWidth = 1.5;
+    dx.strokeRect(cx+4, cy+4, cw-8, ch-8);
+    // 제목
+    dx.fillStyle = '#333';
+    dx.font = 'bold 10px "Press Start 2P"';
+    dx.textAlign = 'center';
+    dx.fillText('성적표', cx + cw/2, cy + 22);
+    // 구분선
+    dx.fillStyle = '#333';
+    dx.fillRect(cx+10, cy+28, cw-20, 1);
+    // 맞은 과목
+    dx.fillStyle = '#555';
+    dx.font = '8px "Press Start 2P"';
+    dx.fillText(hitItem + ' 과목', cx + cw/2, cy + 48);
+    // F 학점 (빨간색 크게)
+    dx.fillStyle = '#e74c3c';
+    dx.font = 'bold 42px "Press Start 2P"';
+    dx.fillText('F', cx + cw/2, cy + 96);
+    // 학점
+    dx.fillStyle = '#888';
+    dx.font = '7px "Press Start 2P"';
+    dx.fillText('학점: 0.0 / 4.5', cx + cw/2, cy + 116);
+    dx.textAlign = 'left';
+  }
+
+  function dungLoop(ts) {
+    if (!dungRunning) return;
+    const dt = Math.min(ts - lastTime, 50); lastTime = ts;
+
+    // 진행바 (연결 끊김까지 남은 시간)
+    disconnectTimer -= dt;
+
+    if (disconnectTimer <= 0) {
+      dungRunning = false;
+      showOfflinePhase();
+      return;
+    }
+
+    // 성적표 표시 중이면 게임 일시정지
+    if (hitFlash > 0) {
+      hitFlash -= dt;
+      // 배경은 계속 그리기
+      dx.fillStyle = '#1a1c2c'; dx.fillRect(0,0,DW,DH);
+      dx.fillStyle = '#ffffff22';
+      for (let i=0;i<40;i++) dx.fillRect((i*73)%DW, (i*51)%DH, 2, 2);
+      dx.fillStyle = '#78C040'; dx.fillRect(0, DH-8, DW, 8);
+      drawReportCard();
+      dungRaf = requestAnimationFrame(dungLoop);
+      return;
+    }
+
+    // 플레이어 이동
+    if (keys['ArrowLeft'])  dungPlayer.vx = -dungPlayer.speed;
+    else if (keys['ArrowRight']) dungPlayer.vx = dungPlayer.speed;
+    else dungPlayer.vx *= 0.7;
+    dungPlayer.x = Math.max(0, Math.min(DW - dungPlayer.w, dungPlayer.x + dungPlayer.vx));
+
+    // 아이템 스폰 — 7초 동안 점점 빨라지되 시작은 느리게
+    itemTimer += dt;
+    const elapsed = DISCONNECT_AFTER - disconnectTimer;
+    const spawnInterval = Math.max(700, 1400 - elapsed * 0.08);
+    if (itemTimer > spawnInterval) {
+      itemTimer = 0;
+      dungItems.push({
+        x: Math.random() * (DW - 34),
+        y: -34, size: 28,
+        // 속도: 처음엔 1.2~2, 시간 지날수록 최대 3.5
+        speed: 1.2 + Math.random() * 0.8 + (elapsed / DISCONNECT_AFTER) * 1.5,
+        emoji: ITEMS[Math.floor(Math.random() * ITEMS.length)]
+      });
+    }
+
+    // 아이템 이동 & 충돌
+    for (const it of dungItems) { it.y += it.speed; }
+
+    // 충돌한 아이템 찾기
+    const hitIdx = dungItems.findIndex(it =>
+      it.x < dungPlayer.x + dungPlayer.w - 4 &&
+      it.x + it.size > dungPlayer.x + 4 &&
+      it.y + it.size > dungPlayer.y + 4 &&
+      it.y < dungPlayer.y + dungPlayer.h
+    );
+    if (hitIdx !== -1) {
+      hitItem = dungItems[hitIdx].emoji;
+      dungItems.splice(hitIdx, 1); // 맞은 아이템 제거
+      hitFlash = 1200; // 1.2초 성적표 표시
+    }
+
+    dungItems = dungItems.filter(it => it.y < DH + 40);
+    dungScore++;
+    document.getElementById('dung-score').textContent = dungScore;
+
+    // 그리기
+    dx.fillStyle = '#1a1c2c'; dx.fillRect(0,0,DW,DH);
+    // 별
+    dx.fillStyle = '#ffffff33';
+    for (let i=0;i<40;i++) dx.fillRect((i*73)%DW, (i*51)%DH, 2, 2);
+    // 지면
+    dx.fillStyle = '#78C040'; dx.fillRect(0, DH-8, DW, 8);
+
+    // 아이템
+    dx.font = '22px serif';
+    for (const it of dungItems) dx.fillText(it.emoji, it.x, it.y + it.size);
+
+    // 플레이어 (작은 픽셀 캐릭터)
+    const px = dungPlayer.x, py = dungPlayer.y;
+    // 모자
+    dx.fillStyle = '#111'; dx.fillRect(px+6, py, 20, 6); dx.fillRect(px+8, py-6, 16, 8);
+    dx.fillStyle = '#f8f8f8'; dx.fillRect(px+10, py-4, 6, 4);
+    // 얼굴
+    dx.fillStyle = '#f5cba7'; dx.fillRect(px+8, py+6, 16, 12);
+    dx.fillStyle = '#111'; dx.fillRect(px+10, py+9, 3, 3); dx.fillRect(px+19, py+9, 3, 3);
+    // 몸
+    dx.fillStyle = '#3498db'; dx.fillRect(px+6, py+18, 20, 14);
+    dx.fillStyle = '#e67e22'; dx.fillRect(px+2, py+18, 6, 12);
+    // 다리
+    dx.fillStyle = '#2176ae'; dx.fillRect(px+8, py+32, 7, 8); dx.fillRect(px+17, py+32, 7, 8);
+    dx.fillStyle = '#111'; dx.fillRect(px+6, py+38, 9, 4); dx.fillRect(px+17, py+38, 9, 4);
+
+    dungRaf = requestAnimationFrame(dungLoop);
+  }
+  dungRaf = requestAnimationFrame(dungLoop);
+}
+
+// ── Phase 3: 오프라인 화면 ───────────────────────────
+function showOfflinePhase() {
+  cancelAnimationFrame(dungRaf);
+  document.getElementById('phase-game').style.display = 'none';
+  document.getElementById('phase-offline').style.display = 'flex';
+  document.getElementById('url-text').textContent = 'study-escape.fun/dung-dodge';
+
+  // 픽셀 공룡 그리기
+  const dinoC = document.getElementById('dino-pixel');
+  const dinoX = dinoC.getContext('2d');
+  dinoX.imageSmoothingEnabled = false;
+  const dp = 4;
+  const _n = null, Kd='#555', Wd='#fff';
+  const DINO = [
+    [_n,_n,Kd,Kd,Kd,Kd,Kd,Kd,_n,_n,_n,_n,_n],
+    [_n,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd],
+    [_n,Kd,Kd,Wd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd],
+    [Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,_n],
+    [Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,_n,_n,_n,_n],
+    [_n,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,_n,_n,_n,_n],
+    [_n,_n,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd,Kd],
+    [_n,_n,_n,Kd,Kd,Kd,Kd,Kd,Kd,Kd,_n,_n,_n],
+    [_n,_n,_n,Kd,Kd,Kd,Kd,Kd,Kd,_n,_n,_n,_n],
+    [_n,_n,_n,Kd,Kd,_n,_n,Kd,Kd,_n,_n,_n,_n],
+    [_n,_n,_n,Kd,Kd,_n,_n,Kd,Kd,_n,_n,_n,_n],
+    [_n,_n,_n,Kd,Kd,_n,_n,Kd,_n,_n,_n,_n,_n],
+  ];
+  for (let r=0;r<DINO.length;r++)
+    for (let c=0;c<DINO[r].length;c++) {
+      if (!DINO[r][c]) continue;
+      dinoX.fillStyle = DINO[r][c];
+      dinoX.fillRect(c*dp, r*dp+2, dp, dp);
+    }
+  dinoX.fillStyle = '#85c1e9';
+  dinoX.fillRect(3*dp, 3*dp+2, dp, dp*2);
+}
+
+// ── 화면 전환 (오프라인 → 공룡게임) ─────────────────
+let chromeVisible = true;
+function dismissChromeScreen() {
+  if (!chromeVisible) return;
+  // 아직 Phase 1이면 막기
+  if (document.getElementById('phase-offline').style.display !== 'flex') return;
+  chromeVisible = false;
+  const el = document.getElementById('chrome-screen');
+  el.style.transition = 'opacity 0.35s';
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; startGame(); }, 350);
+}
+
+document.getElementById('chrome-retry-btn').addEventListener('click', e => {
+  e.stopPropagation();
+});
+document.getElementById('chrome-screen').addEventListener('click', () => {
+  dismissChromeScreen();
+});
+document.getElementById('chrome-screen').addEventListener('touchstart', e => {
+  e.preventDefault(); dismissChromeScreen();
+}, { passive: false });
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const W = canvas.width, H = canvas.height;
+const GND = H - 55;
+
+// ── PIXEL SPRITE SCALE ───────────────────────────────────────────────
+// Canvas is 820px wide displayed as-is, so P=4 gives chunky GB-feel pixels
+const P = 4;
+
+// ── PALETTE ──────────────────────────────────────────────────────────
+const _ = null;
+const K  = '#111111'; // black
+const W1 = '#F8F8F8'; // white
+const W2 = '#C0C0C0'; // light gray
+const SK = '#F5CBA7'; // skin
+const SK2= '#D4A574'; // skin shadow
+const R  = '#E74C3C'; // red
+const R2 = '#C0392B'; // dark red
+const B  = '#3498DB'; // blue (student uniform)
+const B2 = '#2176AE'; // dark blue
+const B3 = '#85C1E9'; // light blue
+const PR = '#8E44AD'; // purple (prof suit)
+const PR2= '#6C3483'; // dark purple
+const WH = '#F0F0F0'; // white hair
+const GR = '#7F8C8D'; // gray
+const GR2= '#5D6D7E'; // dark gray
+const N  = '#784818'; // brown
+const N2 = '#5C3A1A'; // dark brown
+const YW = '#F9E79F'; // paper/cream
+const OR = '#E67E22'; // orange (backpack)
+const OR2= '#D35400'; // dark orange
+const GN = '#27AE60'; // green
+const GN2= '#1E8449'; // dark green
+
+// ── SPRITE RENDERER ──────────────────────────────────────────────────
+function spr(data, cx, cy) {
+  for (let row = 0; row < data.length; row++)
+    for (let col = 0; col < data[row].length; col++) {
+      const c = data[row][col];
+      if (!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect(cx + col * P, cy + row * P, P, P);
+    }
+}
+
+// ── STUDENT SPRITES (12×16 px → 48×64 on canvas) ────────────────────
+// Running frame A
+const STU_A = [
+  // Hat
+  [_,_,_,K,K,K,K,K,K,_,_,_],
+  [_,_,K,K,K,K,K,K,K,K,_,_],
+  [_,_,K,W1,W1,K,K,K,K,_,_,_],
+  [_,K,K,K,K,K,K,K,K,K,K,_],
+  // Face
+  [_,_,SK,SK,SK,SK,SK,SK,SK,_,_,_],
+  [_,SK,SK,SK,K,SK,SK,K,SK,SK,_,_],
+  [_,SK,SK,SK,SK,SK,SK,SK,SK,SK,_,_],
+  // Body (blue uniform)
+  [_,B3,B,B,B,B,B,B,B,B3,_,_],
+  [B,B,B,B,B,B,B,B,B,B,_,_],
+  [B,B,B,B,B,B,B,B,B,B,_,_],
+  [B2,B2,B,B,B,B,B,B,B2,B2,_,_],
+  // Backpack
+  [OR,B,B,B,B,B,B,B,B,OR,_,_],
+  // Legs (A: right fwd)
+  [_,B2,B2,B2,_,_,_,B2,B2,_,_,_],
+  [_,B2,B2,B2,_,_,B2,B2,_,_,_,_],
+  [_,K,K,K,_,_,K,K,_,_,_,_],
+  [_,K,K,K,_,_,K,K,_,_,_,_],
+];
+// Running frame B
+const STU_B = [
+  [_,_,_,K,K,K,K,K,K,_,_,_],
+  [_,_,K,K,K,K,K,K,K,K,_,_],
+  [_,_,K,W1,W1,K,K,K,K,_,_,_],
+  [_,K,K,K,K,K,K,K,K,K,K,_],
+  [_,_,SK,SK,SK,SK,SK,SK,SK,_,_,_],
+  [_,SK,SK,SK,K,SK,SK,K,SK,SK,_,_],
+  [_,SK,SK,SK,SK,SK,SK,SK,SK,SK,_,_],
+  [_,B3,B,B,B,B,B,B,B,B3,_,_],
+  [B,B,B,B,B,B,B,B,B,B,_,_],
+  [B,B,B,B,B,B,B,B,B,B,_,_],
+  [B2,B2,B,B,B,B,B,B,B2,B2,_,_],
+  [OR,B,B,B,B,B,B,B,B,OR,_,_],
+  // Legs (B: left fwd)
+  [_,_,B2,B2,_,_,B2,B2,B2,_,_,_],
+  [_,_,_,B2,B2,B2,B2,B2,_,_,_,_],
+  [_,_,_,K,K,K,K,K,_,_,_,_],
+  [_,_,_,K,K,K,K,K,_,_,_,_],
+];
+// Duck frame
+const STU_DUCK = [
+  [_,_,_,K,K,K,K,K,K,_,_,_],
+  [_,_,K,K,K,K,K,K,K,K,_,_],
+  [_,_,K,W1,W1,K,K,K,K,_,_,_],
+  [_,K,K,K,K,K,K,K,K,K,K,_],
+  [_,_,SK,SK,SK,SK,SK,SK,SK,_,_,_],
+  [_,SK,SK,SK,K,SK,SK,K,SK,SK,_,_],
+  [OR,OR,B,B,B,B,B,B,B,OR,OR,_],
+  [OR,B,B,B,B,B,B,B,B,B,OR,_],
+  [B2,B2,B,B,B,B,B,B,B2,B2,_,_],
+  // Legs splayed
+  [B2,B2,_,_,_,_,_,_,B2,B2,_,_],
+  [K,K,_,_,_,_,_,_,K,K,_,_],
+];
+
+// ── OBSTACLE SPRITES ─────────────────────────────────────────────────
+// Desk (13×9)
+const DESK_SPR = [
+  [_,_,YW,YW,YW,YW,YW,YW,YW,YW,_,_,_],
+  [_,_,YW,R,R,R,YW,GR,GR,YW,_,_,_],
+  [_,_,YW,R,GR2,GR2,YW,GR,GR,YW,_,_,_],
+  [_,_,YW,YW,YW,YW,YW,YW,YW,YW,_,_,_],
+  [_,N,N,N,N,N,N,N,N,N,N,N,_],
+  [_,N2,N,N,N,N,N,N,N,N,N,N2,_],
+  [_,_,N2,N2,_,_,_,_,N2,N2,_,_,_],
+  [_,_,N2,N2,_,_,_,_,N2,N2,_,_,_],
+  [_,_,N2,N2,_,_,_,_,N2,N2,_,_,_],
+];
+// Bookshelf (8×14)
+const SHELF_SPR = [
+  [N,N,N,N,N,N,N,N],
+  [N,R,R,B,B,GN,GN,N],
+  [N,R,R,B,B,GN,GN,N],
+  [N,R,R,B,B,GN,GN,N],
+  [N,R,R,B,B,GN,GN,N],
+  [N2,N2,N2,N2,N2,N2,N2,N2],
+  [N,OR,OR,PR,PR,B2,B2,N],
+  [N,OR,OR,PR,PR,B2,B2,N],
+  [N,OR,OR,PR,PR,B2,B2,N],
+  [N,OR,OR,PR,PR,B2,B2,N],
+  [N2,N2,N2,N2,N2,N2,N2,N2],
+  [N,GN,GN,R,R,OR,OR,N],
+  [N,GN,GN,R,R,OR,OR,N],
+  [N2,N2,N2,N2,N2,N2,N2,N2],
+];
+// Grad student flying (10×9)
+const GRAD_SPR = [
+  [_,_,K,K,K,K,_,_,_,_],
+  [_,K,SK,SK,SK,SK,K,_,_,_],
+  [_,K,SK,K,SK,K,SK,K,_,_],  // tired eyes
+  [_,K,SK,SK,SK,SK,K,_,_,_],
+  [GR,GR,GR,GR,GR,GR,GR,GR,_,_],  // hoodie
+  [GR,GR,GR,GR,GR,GR,GR,GR,_,_],
+  [GR2,GR,GR,GR,GR,GR,GR,GR2,_,_],
+  [_,YW,YW,_,_,_,YW,YW,_,_],  // papers
+  [_,YW,YW,_,_,_,YW,YW,_,_],
+];
+
+// ── GAME STATE ────────────────────────────────────────────────────────
+const GOAL = 1500; // 클리어 목표 점수
+
+let state = 'idle';
+let score = 0, hiScore = 0, frame = 0;
+let speed = 4.5, speedTimer = 0;
+let obstacles = [];
+let jumpQ = false, duckQ = false;
+let cloudTimer = 0;
+let groundScroll = 0;
+let clearAnim = 0; // 클리어 후 애니메이션 타이머
+
+const clouds = [];
+const buildings = Array.from({length: 6}, (_, i) => ({
+  x: i * 160,
+  w: 80 + Math.floor(Math.random() * 60),
+  h: 40 + Math.floor(Math.random() * 60),
+}));
+
+// ── STUDENT (player) ──────────────────────────────────────────────────
+const student = {
+  x: 120, y: GND,
+  vy: 0, jumping: false, ducking: false,
+  anim: 0, animT: 0,
+
+  draw() {
+    const sp = this.ducking ? STU_DUCK : (this.anim ? STU_A : STU_B);
+    const sprH = sp.length * P;
+    spr(sp, this.x, this.y - sprH);
+  },
+  jump() {
+    if (!this.jumping && !this.ducking) { this.vy = -14; this.jumping = true; }
+  },
+  duck(on) { if (!this.jumping) this.ducking = on; },
+  update() {
+    // animate legs
+    this.animT++;
+    if (this.animT > 8) { this.anim ^= 1; this.animT = 0; }
+    if (this.jumping) {
+      this.vy += 0.8;
+      this.y += this.vy;
+      if (this.y >= GND) { this.y = GND; this.jumping = false; this.vy = 0; }
+    }
+  },
+  get box() {
+    if (this.ducking) {
+      const h = STU_DUCK.length * P;
+      // y는 항상 this.y 기준 (점프 중에도 실제 위치 반영)
+      return { x: this.x + 2*P, y: this.y - h + 2*P, w: 8*P, h: h - 2*P };
+    }
+    const h = STU_A.length * P;
+    // 좌우 3px, 상단 2px 여유 줘서 판정 타이트하지 않게
+    return { x: this.x + 3*P, y: this.y - h + 2*P, w: 6*P, h: h - 2*P };
+  }
+};
+
+// ── OBSTACLES ─────────────────────────────────────────────────────────
+function makeDesk() {
+  const sw = DESK_SPR[0].length * P;
+  const sh = DESK_SPR.length * P;
+  return {
+    type: 'desk', x: W + 20, w: sw, h: sh,
+    draw() { spr(DESK_SPR, this.x, GND - sh); },
+    // 책상 다리+상판만 판정, 좌우 여유
+    get box() { return { x: this.x + 2*P, y: GND - sh + 2*P, w: sw - 4*P, h: sh - 2*P }; }
+  };
+}
+function makePillar() {
+  const sw = SHELF_SPR[0].length * P;
+  const sh = SHELF_SPR.length * P;
+  return {
+    type: 'pillar', x: W + 20, w: sw, h: sh,
+    draw() { spr(SHELF_SPR, this.x, GND - sh); },
+    get box() { return { x: this.x + 2*P, y: GND - sh + P, w: sw - 4*P, h: sh - P }; }
+  };
+}
+function makeGradStudent() {
+  // 숙여야만 통과 가능한 높이: 서있으면 머리에 걸림, 숙이면 통과
+  // 학생 서있는 높이: STU_A.length * P = 16*4 = 64px
+  // 학생 숙인 높이:   STU_DUCK.length * P = 11*4 = 44px
+  // 장애물 하단이 GND - 50 (숙인 머리보다 살짝 아래), 상단은 GND - 80 정도
+  const sw = GRAD_SPR[0].length * P;
+  const sh = GRAD_SPR.length * P;
+  // 딱 하나의 명확한 높이: 서있으면 맞고 숙이면 지나감
+  const altY = GND - 64 - 4; // 서있는 머리 바로 위에 하단이 걸침
+  return {
+    type: 'grad', x: W + 20, y: altY, w: sw, h: sh,
+    phase: 0,
+    draw() {
+      spr(GRAD_SPR, this.x, this.y);
+      const bob = Math.sin(this.phase) * 2 | 0;
+      ctx.fillStyle = YW;
+      ctx.fillRect(this.x - P*2, this.y + P + bob, P*2, P*3);
+      ctx.fillStyle = R;
+      ctx.fillRect(this.x - P*2 + 1, this.y + P*2 + bob, P, 2);
+    },
+    update() { this.phase += 0.1; },
+    get box() { return { x: this.x + 2*P, y: this.y + P, w: sw - 4*P, h: sh - 2*P }; }
+  };
+}
+
+function spawnObstacle() {
+  const last = obstacles[obstacles.length - 1];
+  const gap = 220 + Math.random() * Math.max(50, 400 - speed * 20);
+  const minX = last ? last.x + (last.w || 50) + gap : W + 100;
+  let o;
+  const r = Math.random();
+  if (score > 300 && r < 0.25) o = makeGradStudent(); // 숙이기 장애물
+  else if (r < 0.55) o = makeDesk();                  // 점프 장애물
+  else o = makePillar();                               // 점프 장애물
+  o.x = Math.max(W + 20, minX);
+  obstacles.push(o);
+}
+
+// ── BACKGROUND ────────────────────────────────────────────────────────
+function drawBackground() {
+  ctx.fillStyle = '#fff8e7';
+  ctx.fillRect(0, 0, W, H);
+
+  for (const b of buildings) {
+    ctx.fillStyle = '#ece0cc';
+    ctx.fillRect(b.x, GND - b.h, b.w, b.h);
+    for (let wy = GND - b.h + 6; wy < GND - 8; wy += 14)
+      for (let wx = b.x + 6; wx < b.x + b.w - 8; wx += 16) {
+        ctx.fillStyle = Math.random() > 0.8 ? '#f9e79f' : '#d5e8d4';
+        ctx.fillRect(wx, wy, 8, 8);
+      }
+    b.x -= speed * 0.15;
+    if (b.x + b.w < 0) { b.x = W + 10; b.w = 80 + Math.floor(Math.random() * 60); b.h = 40 + Math.floor(Math.random() * 60); }
+  }
+
+  ctx.fillStyle = '#c8a96e';
+  ctx.fillRect(0, GND, W, H - GND);
+  ctx.fillStyle = '#a0784a';
+  ctx.fillRect(0, GND, W, 4);
+  groundScroll = (groundScroll + speed * 0.4) % 40;
+  ctx.fillStyle = '#b8935a';
+  for (let i = (groundScroll | 0); i < W; i += 40)
+    ctx.fillRect(i, GND + 8, 20, 3);
+}
+
+function drawClouds() {
+  cloudTimer++;
+  if (cloudTimer > 100) { clouds.push({ x: W + 20, y: 20 + Math.random() * 60, w: 70 + Math.random() * 90 }); cloudTimer = 0; }
+  for (const cl of clouds) {
+    ctx.fillStyle = '#efe8d4';
+    ctx.fillRect(cl.x, cl.y, cl.w, 12);
+    ctx.fillRect(cl.x + 12, cl.y - 8, cl.w - 24, 12);
+    cl.x -= speed * 0.25;
+  }
+  while (clouds.length && clouds[0].x + (clouds[0].w || 80) < 0) clouds.shift();
+}
+
+// ── 진행 막대 ──────────────────────────────────────────────────────────
+function drawProgressBar() {
+  const barW = 180, barH = 14;
+  const bx = W - barW - 10, by = 8;
+  const prog = Math.min(1, score / GOAL);
+
+  // 라벨
+  ctx.fillStyle = '#555';
+  ctx.font = '6px "Press Start 2P"';
+  ctx.fillText('강의실까지', bx, by - 1);
+
+  // 배경
+  ctx.fillStyle = '#ddd';
+  ctx.fillRect(bx, by + 8, barW, barH);
+  ctx.fillStyle = '#333';
+  ctx.fillRect(bx, by + 8, barW, 2);
+  ctx.fillRect(bx, by + 8, 2, barH);
+  ctx.fillRect(bx + barW - 2, by + 8, 2, barH);
+  ctx.fillRect(bx, by + 8 + barH - 2, barW, 2);
+
+  // 채움 (초록 → 노랑 → 빨강 역순: 많이 갈수록 초록)
+  const fillW = Math.floor((barW - 4) * prog);
+  const r = Math.round(255 * (1 - prog));
+  const g = Math.round(200 * prog + 55);
+  ctx.fillStyle = `rgb(${r},${g},60)`;
+  ctx.fillRect(bx + 2, by + 10, fillW, barH - 4);
+
+  // 골 깃발 아이콘
+  ctx.fillStyle = '#e74c3c';
+  ctx.fillRect(bx + barW + 4, by + 4, 2, 14);
+  ctx.fillStyle = '#e74c3c';
+  ctx.fillRect(bx + barW + 6, by + 4, 8, 6);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(bx + barW + 7, by + 5, 6, 4);
+
+  // % 텍스트
+  ctx.fillStyle = '#333';
+  ctx.font = '5px "Press Start 2P"';
+  ctx.fillText(Math.floor(prog * 100) + '%', bx + barW - 28, by + 19);
+}
+
+// ── 클리어 팝업 ────────────────────────────────────────────────────────
+function drawClearPopup() {
+  // 반투명 오버레이
+  ctx.fillStyle = 'rgba(255,248,231,0.82)';
+  ctx.fillRect(0, 0, W, H);
+
+  // 팝업 박스
+  const pw = 500, ph = 220;
+  const px = (W - pw) / 2, py = (H - ph) / 2 - 10;
+  ctx.fillStyle = '#fffde7';
+  ctx.fillRect(px, py, pw, ph);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(px, py, pw, ph);
+  ctx.strokeStyle = '#e74c3c';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(px + 4, py + 4, pw - 8, ph - 8);
+
+  // 제목
+  ctx.fillStyle = '#27ae60';
+  ctx.font = 'bold 13px "Press Start 2P"';
+  ctx.textAlign = 'center';
+  ctx.fillText('🎉 강의실 도착!', W / 2, py + 34);
+
+  ctx.fillStyle = '#555';
+  ctx.font = '7px "Press Start 2P"';
+  ctx.fillText('지각 0초 전!! 간신히 도착했다!', W / 2, py + 56);
+
+  // ── 웃는 학생 픽셀 (가운데) ─────────────────────────────────────────
+  const t = clearAnim;
+  const bounce = Math.sin(t * 0.08) * 6 | 0;
+  const sx = W / 2 - 10, sy = py + ph - 55 + bounce;
+
+  // 모자
+  ctx.fillStyle = K; ctx.fillRect(sx-12, sy-52, 32, 8);
+  ctx.fillRect(sx-8, sy-60, 24, 12);
+  ctx.fillStyle = W1; ctx.fillRect(sx-4, sy-56, 8, 4);
+  // 얼굴 (웃음)
+  ctx.fillStyle = SK; ctx.fillRect(sx-8, sy-40, 20, 18);
+  // 눈 ^^ 모양
+  ctx.fillStyle = K;
+  ctx.fillRect(sx-4, sy-34, 4, 2); ctx.fillRect(sx+4, sy-34, 4, 2);
+  ctx.fillRect(sx-5, sy-36, 2, 2); ctx.fillRect(sx+7, sy-36, 2, 2);
+  // 웃는 입
+  ctx.fillRect(sx-4, sy-26, 12, 2);
+  ctx.fillRect(sx-5, sy-28, 2, 2); ctx.fillRect(sx+7, sy-28, 2, 2);
+  // 몸 (파란 교복)
+  ctx.fillStyle = B; ctx.fillRect(sx-10, sy-22, 28, 22);
+  ctx.fillStyle = OR; ctx.fillRect(sx-14, sy-22, 6, 18);
+  // 팔 만세 (흔들흔들)
+  ctx.fillStyle = B;
+  ctx.fillRect(sx-20, sy-40 + (Math.sin(t*0.12)*6|0), 12, 8);
+  ctx.fillRect(sx+16, sy-40 - (Math.sin(t*0.12)*6|0), 12, 8);
+  // 손
+  ctx.fillStyle = SK;
+  ctx.fillRect(sx-22, sy-34 + (Math.sin(t*0.12)*6|0), 6, 6);
+  ctx.fillRect(sx+20, sy-34 - (Math.sin(t*0.12)*6|0), 6, 6);
+  // 다리
+  ctx.fillStyle = B2;
+  ctx.fillRect(sx-6, sy, 10, 14); ctx.fillRect(sx+4, sy, 10, 14);
+  ctx.fillStyle = K;
+  ctx.fillRect(sx-8, sy+12, 12, 4); ctx.fillRect(sx+4, sy+12, 12, 4);
+
+  // 말풍선 "출석 완료!!" — 팝업 상단 고정
+  const bubX = W/2, bubY = py + 76;
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#27ae60';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(bubX - 70, bubY, 140, 26, 6); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#27ae60'; ctx.font = '8px "Press Start 2P"';
+  ctx.textAlign = 'center';
+  ctx.fillText('출석 완료!! 🎉', bubX, bubY + 18);
+  // 꼬리 (말풍선 → 학생 머리 방향)
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(bubX - 10, bubY + 26);
+  ctx.lineTo(bubX - 16, bubY + 38);
+  ctx.lineTo(bubX + 8,  bubY + 26);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  // 점수
+  ctx.fillStyle = '#333';
+  ctx.font = '7px "Press Start 2P"';
+  ctx.fillText(`SCORE: ${String(score).padStart(5,'0')}`, W/2, py + ph - 24);
+
+  // 재시작
+  if (Math.floor(clearAnim / 30) % 2 === 0) {
+    ctx.fillStyle = '#27ae60';
+    ctx.font = '7px "Press Start 2P"';
+    ctx.fillText('[ SPACE ] 다시 도전', W/2, py + ph - 8);
+  }
+
+  ctx.textAlign = 'left';
+  clearAnim++;
+}
+let debug = false;
+function drawBox(b, color = 'rgba(255,0,0,0.4)') {
+  ctx.fillStyle = color;
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.strokeStyle = 'red';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(b.x, b.y, b.w, b.h);
+}
+
+// ── COLLISION ─────────────────────────────────────────────────────────
+function collides(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+         a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+// ── SCORE ─────────────────────────────────────────────────────────────
+function updateScore() {
+  score++;
+  if (score > hiScore) hiScore = score;
+  document.getElementById('score').textContent = String(score).padStart(5, '0');
+  document.getElementById('hi').textContent = String(hiScore).padStart(5, '0');
+  const remaining = Math.max(0, 100 - Math.floor(score / GOAL * 100));
+  document.getElementById('danger').textContent = remaining + '%';
+}
+
+// ── OVERLAY ───────────────────────────────────────────────────────────
+function setOverlay(show, dead = false) {
+  const ol = document.getElementById('overlay');
+  if (!show) { ol.style.display = 'none'; return; }
+  ol.style.display = 'flex';
+  const msgs = ['장애물에 걸렸다!!', '이러다 지각이야!!', '일어나!! 뛰어!!', '다시 뛰어야 해!!'];
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  ol.innerHTML = dead
+    ? `<div style="font-size:13px;color:#e74c3c;text-shadow:2px 2px 0 #c0392b;margin-bottom:8px">넘어졌다...😭</div>
+       <div style="font-size:8px;color:#888;margin-bottom:16px">"${msg}"</div>
+       <div class="hint">[ SPACE / TAP ] 다시 뛰기</div>`
+    : `<h1>🏃 강의실까지 뛰어라!</h1>
+       <div class="sub">eclass 다운... 출석은 직접 해야 한다</div>
+       <div class="hint">[ SPACE / TAP ] 뛰기 시작!</div>`;
+}
+
+// ── START ──────────────────────────────────────────────────────────────
+function startGame() {
+  if (state === 'running') return;
+  state = 'running';
+  score = 0; frame = 0; speed = 4.5; speedTimer = 0;
+  obstacles = []; clearAnim = 0;
+  student.y = GND; student.vy = 0; student.jumping = false; student.ducking = false;
+  setOverlay(false);
+}
+
+// ── LOOP ──────────────────────────────────────────────────────────────
+function loop() {
+  drawBackground();
+  drawClouds();
+
+  if (state === 'running') {
+    frame++;
+    updateScore();
+    speedTimer++;
+    if (speedTimer > 110) { speed = Math.min(15, speed + 0.35); speedTimer = 0; }
+
+    // 클리어 체크
+    if (score >= GOAL) {
+      state = 'clear';
+      obstacles = [];
+      clearAnim = 0;
+    }
+
+    if (obstacles.length === 0 || obstacles[obstacles.length-1].x < W - 300 - Math.random() * 200)
+      if (frame > 80) spawnObstacle();
+
+    if (jumpQ) { student.jump(); jumpQ = false; }
+    student.duck(duckQ);
+    student.update();
+
+    for (const o of obstacles) {
+      o.x -= speed;
+      if (o.update) o.update();
+      o.draw();
+      if (debug) drawBox(o.box, 'rgba(255,100,0,0.35)');
+      if (collides(student.box, o.box)) {
+        state = 'dead';
+        setOverlay(true, true);
+      }
+    }
+    obstacles = obstacles.filter(o => o.x + (o.w || 60) + 10 > 0);
+  }
+
+  student.draw();
+  if (debug) drawBox(student.box, 'rgba(0,200,255,0.4)');
+
+  if (state === 'running') {
+    ctx.fillStyle = 'rgba(231,76,60,0.15)';
+    ctx.fillRect(0, 0, W * Math.min(1, speed / 15), 4);
+    drawProgressBar();
+  }
+
+  if (state === 'clear') {
+    student.update();
+    drawClearPopup();
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ── INPUT ─────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (chromeVisible) {
+    // 오프라인 화면에서만 스페이스로 전환
+    if (e.code === 'Space' && document.getElementById('phase-offline').style.display === 'flex') {
+      e.preventDefault(); dismissChromeScreen();
+    }
+    return;
+  }
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (state !== 'running') startGame(); else jumpQ = true;
+  }
+  if (e.code === 'ArrowDown') { e.preventDefault(); duckQ = true; }
+  if (e.code === 'KeyD') debug = !debug;
+});
+document.addEventListener('keyup', e => { if (e.code === 'ArrowDown') duckQ = false; });
+
+// 게임 캔버스 터치
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (chromeVisible) { dismissChromeScreen(); return; }
+  const ty = e.touches[0].clientY;
+  const cy = canvas.getBoundingClientRect().top + canvas.clientHeight / 2;
+  if (ty > cy) duckQ = true;
+  else { if (state !== 'running') startGame(); else jumpQ = true; }
+}, { passive: false });
+canvas.addEventListener('touchend', () => { duckQ = false; });
+
+// 게임 오버레이 클릭 (dead/idle 상태에서 클릭으로 시작)
+document.getElementById('overlay').addEventListener('click', () => {
+  if (state !== 'running') startGame();
+});
+
+// 크롬 화면이 덮고 있으므로 게임 오버레이는 숨김
+setOverlay(false);
+loop();
+</script>
+</body>
+</html>

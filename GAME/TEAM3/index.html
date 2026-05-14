@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Snake Pill Game</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --page-start: #f8fbff;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #6d788e;
+      --primary: #2d9cdb;
+      /* 바이오메디컬 블루 */
+      --primary-dark: #1b6ca8;
+      --accent: #eb5757;
+      /* 시약 레드 */
+      --soft: #eef3f9;
+      --board: #f7fafd;
+      --board-frame: #edf3fa;
+      --grid: #e5ecf5;
+      --snake: #27ae60;
+      /* 세포 그린 */
+      --snake-head: #1e8449;
+      --eye-pupil: #000000;
+      /* 픽셀 눈동자 */
+      --tongue: #ffcccc;
+      /* 픽셀 혀 */
+      --pill-light: #ffffff;
+      --shadow: 0 22px 50px rgba(23, 32, 51, 0.14);
+      --item-color: #9b51e0;
+      /* 아이템 보라색 */
+      --danger-color: #f2994a;
+      /* 위험 주황색 */
+    }
+
+    body[data-theme="dark"] {
+      --bg: #111827;
+      --page-start: #1b2638;
+      --panel: #182232;
+      --ink: #eef5ff;
+      --muted: #9caac0;
+      --primary: #4cc9f0;
+      --primary-dark: #2d9cdb;
+      --accent: #ff718d;
+      --soft: #243246;
+      --board: #111827;
+      --board-frame: #0d1420;
+      --grid: #223047;
+      --snake: #2ecc71;
+      --snake-head: #a2f9d1;
+      --eye-pupil: #ffffff;
+      /* 다크 모드 픽셀 눈동자 */
+      --tongue: #ffcccc;
+      /* 다크 모드 픽셀 혀 */
+      --pill-light: #f7fafc;
+      --shadow: 0 22px 56px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(45, 156, 219, 0.18), transparent 30%),
+        radial-gradient(circle at 80% 10%, rgba(235, 87, 87, 0.14), transparent 32%),
+        linear-gradient(135deg, var(--page-start) 0%, var(--bg) 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .app {
+      width: min(94vw, 560px);
+      position: relative;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid rgba(120, 138, 164, 0.22);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    body[data-theme="dark"] .panel {
+      background: rgba(24, 34, 50, 0.9);
+      border-color: rgba(156, 170, 192, 0.2);
+    }
+
+    .center-panel {
+      min-height: min(86vh, 680px);
+      max-height: calc(100vh - 48px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 36px 28px;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    .start-panel {
+      justify-content: flex-start;
+    }
+
+    .pill-mark {
+      display: grid;
+      place-items: center;
+      width: 84px;
+      height: 84px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(45, 156, 219, 0.14), rgba(235, 87, 87, 0.16));
+      font-size: 46px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.35rem, 7vw, 4.6rem);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: clamp(2rem, 7vw, 3.4rem);
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      max-width: 370px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+
+    .game-info {
+      width: min(100%, 420px);
+      display: grid;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .info-block {
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .info-block h3 {
+      margin: 0 0 8px;
+      font-size: 0.92rem;
+      letter-spacing: -0.01em;
+      font-weight: 900;
+    }
+
+    .info-block p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      font-weight: 500;
+    }
+
+    .controls-list {
+      display: grid;
+      gap: 6px;
+      margin: 0 0 8px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .controls-list li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .controls-list strong {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .control-icon {
+      width: 18px;
+      flex: 0 0 18px;
+      text-align: center;
+    }
+
+    .control-note {
+      margin-top: 4px;
+    }
+
+    .description-list {
+      display: grid;
+      gap: 6px;
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .description-list li {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 5;
+      min-height: 40px;
+      padding: 0 14px;
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid rgba(120, 138, 164, 0.24);
+      box-shadow: 0 10px 24px rgba(23, 32, 51, 0.12);
+    }
+
+    .settings {
+      width: min(100%, 420px);
+      display: grid;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .settings label {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .score-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .score-input-row input,
+    .settings select {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid rgba(120, 138, 164, 0.3);
+      border-radius: 8px;
+      padding: 0 14px;
+      color: var(--ink);
+      background: var(--soft);
+      font: inherit;
+      font-size: 1.05rem;
+      font-weight: 800;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .score-input-row input:focus,
+    .settings select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(45, 156, 219, 0.16);
+    }
+
+    .score-unit {
+      color: var(--muted);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .error-message {
+      min-height: 20px;
+      color: var(--accent);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      min-width: 170px;
+      min-height: 48px;
+      padding: 0 22px;
+    }
+
+    .primary-btn {
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 12px 24px rgba(45, 156, 219, 0.24);
+    }
+
+    .primary-btn:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 14px 26px rgba(27, 108, 168, 0.28);
+    }
+
+    .secondary-btn {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    .secondary-btn:hover {
+      background: var(--grid);
+    }
+
+    .game-shell {
+      padding: 18px;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 4px 2px 16px;
+    }
+
+    .score-strip {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      /* 하이스코어 추가를 위해 3열로 변경 */
+      gap: 12px;
+    }
+
+    .score-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-height: 62px;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .score-value {
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .board-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 12px;
+      background: var(--board-frame);
+      box-shadow: inset 0 0 0 1px rgba(120, 138, 164, 0.28);
+    }
+
+    canvas#gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      image-rendering: -webkit-optimize-contrast;
+      touch-action: none;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .final-score {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 154px;
+      min-height: 64px;
+      border-radius: 14px;
+      background: var(--soft);
+      font-size: 2.1rem;
+      font-weight: 900;
+    }
+
+    .result-message {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      font-weight: 800;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 14px;
+      }
+
+      .center-panel {
+        min-height: 78vh;
+        max-height: calc(100vh - 28px);
+        padding: 32px 18px;
+      }
+
+      .game-shell {
+        padding: 12px;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        width: 100%;
+      }
+
+      .theme-toggle {
+        top: 10px;
+        right: 10px;
+      }
+
+      .button-row {
+        width: 100%;
+      }
+
+      .score-value {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+
+<body data-theme="light">
+  <main class="app" aria-live="polite">
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="테마 변경">다크모드</button>
+    <canvas id="confetti-canvas"></canvas>
+
+    <section id="startScreen" class="screen active">
+      <div class="panel center-panel start-panel">
+        <div class="pill-mark" aria-hidden="true">💊</div>
+        <h1>Snake Pill</h1>
+        <p class="subtitle">알약을 먹어 점수를 높이세요!</p>
+
+        <div class="game-info">
+          <div class="info-block" style="text-align: center;">
+            <h3 style="margin-bottom: 4px;">BEST SCORE</h3>
+            <p id="bestScoreStart" style="font-size: 1.5rem; font-weight: 900; color: var(--primary);">0</p>
+          </div>
+          <div class="info-block">
+            <h3>게임 방법 및 조작</h3>
+            <ul class="controls-list">
+              <li><span class="control-icon" aria-hidden="true">▣</span><strong>PC:</strong> 방향키 또는 W, A, S, D 키로 이동
+              </li>
+              <li><span class="control-icon" aria-hidden="true">▣</span><strong>모바일:</strong> 화면을 원하는 방향으로 스와이프(밀기)</li>
+            </ul>
+            <p class="control-note">알약을 먹으며 점수가 올라가며, 벽이나 몸에 부딪히면 종료됩니다.</p>
+          </div>
+          <div class="info-block">
+            <h3>아이템 설명</h3>
+            <ul class="description-list">
+              <li>💊 알약: 먹으면 점수가 1점 올라갑니다.</li>
+              <li>🧪 포션: 한 번에 3점을 얻을 수 있습니다.</li>
+              <li>🧲 자석: 근처 2칸에 있는 알약을 자동으로 끌어당깁니다.</li>
+              <li>⚠️ 위험: 닿으면 점수 4점이 깎이니 주의해주세요.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="settings">
+          <div class="field">
+            <label for="targetScoreInput">목표 점수</label>
+            <div class="score-input-row">
+              <input id="targetScoreInput" type="number" min="1" max="400" step="1" value="10" inputmode="numeric" />
+              <span class="score-unit">점</span>
+            </div>
+            <p id="targetScoreError" class="error-message" aria-live="assertive"></p>
+          </div>
+
+          <div class="field">
+            <label for="speedSelect">속도 설정</label>
+            <select id="speedSelect">
+              <option value="150">쉬움</option>
+              <option value="115" selected>보통</option>
+              <option value="80">어려움</option>
+              <option value="55">매우 어려움</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="startButton" class="primary-btn" type="button">게임 시작</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div class="panel game-shell">
+        <header class="game-header">
+          <div class="score-strip">
+            <div class="score-card">
+              <span class="score-label">Best</span>
+              <span id="bestScoreGame" class="score-value">0</span>
+            </div>
+            <div class="score-card">
+              <span class="score-label">Target</span>
+              <span id="targetScoreDisplay" class="score-value">10</span>
+            </div>
+            <div class="score-card">
+              <span class="score-label">Score</span>
+              <span id="score" class="score-value">0</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="board-wrap">
+          <canvas id="gameCanvas" width="520" height="520" aria-label="뱀 게임 보드"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameOverScreen" class="screen">
+      <div class="panel center-panel">
+        <div id="resultIcon" class="pill-mark" aria-hidden="true">🏁</div>
+        <h2 id="resultTitle">게임 종료</h2>
+        <p class="subtitle">최종 점수</p>
+        <div id="finalScore" class="final-score">0</div>
+        <p id="resultMessage" class="result-message"></p>
+
+        <div class="button-row">
+          <button id="restartButton" class="primary-btn" type="button">다시 시작</button>
+          <button id="homeButton" class="secondary-btn" type="button">처음으로</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const themeToggle = document.getElementById("themeToggle");
+    const startButton = document.getElementById("startButton");
+    const restartButton = document.getElementById("restartButton");
+    const homeButton = document.getElementById("homeButton");
+    const targetScoreInput = document.getElementById("targetScoreInput");
+    const targetScoreError = document.getElementById("targetScoreError");
+    const targetScoreDisplay = document.getElementById("targetScoreDisplay");
+    const speedSelect = document.getElementById("speedSelect");
+    const scoreEl = document.getElementById("score");
+    const finalScoreEl = document.getElementById("finalScore");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultMessage = document.getElementById("resultMessage");
+    const resultIcon = document.getElementById("resultIcon");
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const confettiCanvas = document.getElementById("confetti-canvas");
+    const confCtx = confettiCanvas.getContext("2d");
+
+    // 하이스코어 UI 요소 추가
+    const bestScoreStartEl = document.getElementById("bestScoreStart");
+    const bestScoreGameEl = document.getElementById("bestScoreGame");
+
+    const minTargetScore = 1;
+    const maxTargetScore = 400;
+    const tileCount = 24;
+    const directions = {
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 }
+    };
+
+    let snake;
+    let pill;
+    let specialItem = null;
+    let magnetItem = null;
+    let dangerItem = null;
+    let score;
+    let direction;
+    let nextDirection;
+    let gameTimer;
+    let targetScore = 10;
+    let gameSpeed = 115;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let audioContext;
+    let isEating = false;
+    let eatingAnimTimer = null;
+    let isDead = false;
+    let confettiParticles = [];
+
+    let magnetActive = false;
+    let magnetPointsRemaining = 0;
+
+    let currentPillColor = "#eb5757";
+    let lastPillColor = null;
+    const rainbowColors = [
+      "#eb5757", "#f2994a", "#f2c94c", "#27ae60",
+      "#4cc9f0", "#2d9cdb", "#9b51e0", "#ff718d"
+    ];
+    let colorQueue = [];
+
+    let itemsEatenCount = 0;
+    let nextSpecialAt = 0;
+    let nextMagnetAt = 0;
+    let nextDangerAt = 0;
+    let dangerExpiresAt = 0;
+
+    let pillSparkleAngle = 0;
+    let pillParticles = [];
+
+    // 하이스코어 로직
+    function getHighScore() {
+      return parseInt(localStorage.getItem("snakePill_highScore")) || 0;
+    }
+
+    function updateHighScoreUI() {
+      const high = getHighScore();
+      bestScoreStartEl.textContent = high;
+      bestScoreGameEl.textContent = high;
+    }
+
+    function saveHighScore(newScore) {
+      const currentHigh = getHighScore();
+      if (newScore > currentHigh) {
+        localStorage.setItem("snakePill_highScore", newScore);
+        updateHighScoreUI();
+        return true;
+      }
+      return false;
+    }
+
+    function initConfetti() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+      confettiParticles = [];
+      for (let i = 0; i < 100; i++) {
+        confettiParticles.push({
+          x: Math.random() * confettiCanvas.width,
+          y: -20,
+          size: Math.random() * 8 + 4,
+          color: `hsl(${Math.random() * 360}, 75%, 60%)`,
+          speed: Math.random() * 5 + 3,
+          angle: Math.random() * 6.28,
+          spin: Math.random() * 0.2 - 0.1
+        });
+      }
+    }
+
+    function animateConfetti() {
+      confCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiParticles.forEach(p => {
+        p.y += p.speed;
+        p.x += Math.sin(p.angle) * 2;
+        p.angle += p.spin;
+        confCtx.save();
+        confCtx.translate(p.x, p.y);
+        confCtx.rotate(p.angle);
+        confCtx.fillStyle = p.color;
+        confCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        confCtx.restore();
+      });
+      if (confettiParticles.some(p => p.y < confettiCanvas.height)) {
+        requestAnimationFrame(animateConfetti);
+      }
+    }
+
+    function getAudioContext() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      if (!audioContext) audioContext = new AudioContextClass();
+      if (audioContext.state === "suspended") audioContext.resume();
+      return audioContext;
+    }
+
+    function playTone(frequency, duration, type, volume) {
+      const context = getAudioContext();
+      if (!context) return;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const now = context.currentTime;
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, now);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.02);
+    }
+
+    function playTurnSound() { playTone(380, 0.055, "square", 0.05); }
+    function playEatSound() {
+      playTone(720, 0.09, "sine", 0.08);
+      setTimeout(() => playTone(960, 0.07, "sine", 0.06), 45);
+    }
+    function playSpecialSound() {
+      playTone(880, 0.1, "triangle", 0.1);
+      setTimeout(() => playTone(1100, 0.15, "triangle", 0.08), 80);
+    }
+    function playDangerSound() {
+      playTone(200, 0.2, "sawtooth", 0.1);
+    }
+
+    function showScreen(screen) {
+      [startScreen, gameScreen, gameOverScreen].forEach((item) => {
+        item.classList.toggle("active", item === screen);
+      });
+      if (screen === startScreen) updateHighScoreUI();
+    }
+
+    function clampTargetScore(showMessage) {
+      const rawValue = Number(targetScoreInput.value);
+      const previousValue = targetScore;
+      let nextValue = Number.isFinite(rawValue) && rawValue > 0 ? Math.round(rawValue) : minTargetScore;
+      const isInvalid = !Number.isFinite(rawValue) || rawValue < minTargetScore || rawValue > maxTargetScore;
+      if (nextValue < minTargetScore) nextValue = minTargetScore;
+      if (nextValue > maxTargetScore) nextValue = maxTargetScore;
+      targetScore = nextValue || previousValue;
+      targetScoreInput.value = targetScore;
+      targetScoreDisplay.textContent = targetScore;
+      targetScoreError.textContent = isInvalid && showMessage ? "이 수치는 설정불가합니다." : "";
+      return targetScore;
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.dataset.theme === "dark";
+      document.body.dataset.theme = isDark ? "light" : "dark";
+      themeToggle.textContent = isDark ? "다크모드" : "라이트모드";
+      if (gameScreen.classList.contains("active")) drawGame();
+    }
+
+    function refreshColorQueue() {
+      colorQueue = [...rainbowColors].sort(() => Math.random() - 0.5);
+    }
+
+    function getNextPillColor() {
+      if (colorQueue.length === 0) refreshColorQueue();
+      return colorQueue.pop();
+    }
+
+    function setNextSpawnTimes() {
+      nextSpecialAt = itemsEatenCount + Math.floor(Math.random() * 5) + 3;
+      nextMagnetAt = itemsEatenCount + Math.floor(Math.random() * 10) + 7;
+      nextDangerAt = itemsEatenCount + Math.floor(Math.random() * 6) + 4;
+    }
+
+    function startGame() {
+      getAudioContext();
+      clampTargetScore(true);
+      updateHighScoreUI();
+      gameSpeed = Number(speedSelect.value) || 115;
+      snake = [{ x: 11, y: 12 }, { x: 10, y: 12 }, { x: 9, y: 12 }];
+      score = 0;
+      itemsEatenCount = 0;
+      specialItem = null;
+      magnetItem = null;
+      dangerItem = null;
+      dangerExpiresAt = 0;
+      magnetActive = false;
+      magnetPointsRemaining = 0;
+      setNextSpawnTimes();
+      direction = directions.right;
+      nextDirection = directions.right;
+      isDead = false;
+      scoreEl.textContent = score;
+
+      lastPillColor = null;
+      refreshColorQueue();
+      currentPillColor = getNextPillColor();
+      pill = createRandomPos();
+      pillParticles = [];
+
+      showScreen(gameScreen);
+      clearInterval(gameTimer);
+      drawGame();
+      gameTimer = setInterval(updateGame, gameSpeed);
+    }
+
+    function endGame() {
+      clearInterval(gameTimer);
+      const isSuccess = score >= targetScore;
+      const isNewRecord = saveHighScore(score);
+
+      resultTitle.textContent = isSuccess ? "목표 달성!" : (isNewRecord ? "최고 기록 갱신!" : "게임 종료");
+      resultMessage.textContent = isSuccess ? "축하합니다! 목표 점수에 도달했습니다." : (isNewRecord ? "와우! 당신의 역대 최고 점수입니다." : "아쉽네요! 다시 한 번 도전해보세요.");
+      resultIcon.textContent = isSuccess ? "🏆" : (isNewRecord ? "⭐" : "🏁");
+      finalScoreEl.textContent = score;
+
+      showScreen(gameOverScreen);
+      if (isSuccess || isNewRecord) { initConfetti(); animateConfetti(); }
+    }
+
+    function createRandomPos() {
+      let candidate;
+      do {
+        candidate = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+      } while (
+        snake.some((part) => part.x === candidate.x && part.y === candidate.y) ||
+        (pill && pill.x === candidate.x && pill.y === candidate.y) ||
+        (specialItem && specialItem.x === candidate.x && specialItem.y === candidate.y) ||
+        (magnetItem && magnetItem.x === candidate.x && magnetItem.y === candidate.y) ||
+        (dangerItem && dangerItem.x === candidate.x && dangerItem.y === candidate.y)
+      );
+      return candidate;
+    }
+
+    function updateGame() {
+      direction = nextDirection;
+      const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+      const hitWall = head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount;
+      const hitSelf = snake.some((part) => part.x === head.x && part.y === head.y);
+
+      if (hitWall) {
+        isDead = true;
+        endGame();
+        return;
+      }
+
+      if (hitSelf) {
+        isDead = true;
+        drawGame();
+        setTimeout(endGame, 600);
+        return;
+      }
+
+      snake.unshift(head);
+
+      let pillDistance = Math.sqrt((head.x - pill.x) ** 2 + (head.y - pill.y) ** 2);
+      let canAutoEat = magnetActive && magnetPointsRemaining > 0 && pillDistance <= 2.5;
+
+      if ((head.x === pill.x && head.y === pill.y) || canAutoEat) {
+        score += 1;
+        itemsEatenCount += 1;
+        if (magnetActive && magnetPointsRemaining > 0) {
+          magnetPointsRemaining--;
+          if (magnetPointsRemaining <= 0) magnetActive = false;
+        }
+        scoreEl.textContent = score;
+        playEatSound();
+
+        lastPillColor = currentPillColor;
+        currentPillColor = getNextPillColor();
+
+        if (itemsEatenCount === nextSpecialAt) { specialItem = createRandomPos(); nextSpecialAt = itemsEatenCount + 7; }
+        if (itemsEatenCount === nextMagnetAt) { magnetItem = createRandomPos(); nextMagnetAt = itemsEatenCount + 12; }
+        if (itemsEatenCount === nextDangerAt) {
+          dangerItem = createRandomPos();
+          dangerExpiresAt = itemsEatenCount + 3;
+          nextDangerAt = itemsEatenCount + 5;
+        }
+        if (dangerItem && itemsEatenCount >= dangerExpiresAt) {
+          dangerItem = null;
+          dangerExpiresAt = 0;
+        }
+
+        pill = createRandomPos();
+        isEating = true;
+        if (eatingAnimTimer) clearTimeout(eatingAnimTimer);
+        eatingAnimTimer = setTimeout(() => { isEating = false; drawGame(); }, 300);
+      }
+      else if (specialItem && head.x === specialItem.x && head.y === specialItem.y) {
+        score += 3;
+        scoreEl.textContent = score;
+        playSpecialSound();
+        specialItem = null;
+        snake.pop();
+      }
+      else if (magnetItem && head.x === magnetItem.x && head.y === magnetItem.y) {
+        magnetActive = true;
+        magnetPointsRemaining = 3;
+        playSpecialSound();
+        magnetItem = null;
+        snake.pop();
+      }
+      else if (dangerItem && head.x === dangerItem.x && head.y === dangerItem.y) {
+        score -= 4;
+        if (score < 0) score = 0;
+        scoreEl.textContent = score;
+        playDangerSound();
+        dangerItem = null;
+        dangerExpiresAt = 0;
+        snake.pop();
+      }
+      else { snake.pop(); }
+
+      pillSparkleAngle += 0.25;
+
+      if (Math.random() > 0.6) {
+        const cell = canvas.width / tileCount;
+        const targetX = pill.x;
+        const targetY = pill.y;
+        pillParticles.push({
+          x: (targetX * cell + cell / 2) + (Math.random() - 0.5) * 10,
+          y: (targetY * cell + cell / 2) + (Math.random() - 0.5) * 10,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 1.0,
+          size: Math.random() * 3 + 1
+        });
+      }
+      pillParticles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.05; });
+      pillParticles = pillParticles.filter(p => p.life > 0);
+
+      drawGame();
+    }
+
+    function drawGame() {
+      const cell = canvas.width / tileCount;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBoard(cell);
+      drawPill(cell);
+      if (specialItem) drawSpecialItem(cell, "potion");
+      if (magnetItem) drawSpecialItem(cell, "magnet");
+      if (dangerItem) drawSpecialItem(cell, "danger");
+      drawSnake(cell);
+    }
+
+    function drawBoard(cell) {
+      const styles = getComputedStyle(document.body);
+      ctx.fillStyle = styles.getPropertyValue("--board").trim();
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i <= tileCount; i += 1) {
+        ctx.strokeStyle = styles.getPropertyValue("--grid").trim();
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(canvas.width, i * cell); ctx.stroke();
+      }
+    }
+
+    function drawSnake(cell) {
+      const styles = getComputedStyle(document.body);
+      snake.forEach((part, index) => {
+        const isHead = index === 0;
+        const isTail = index === snake.length - 1;
+        let inset, fillStyle;
+        if (isHead) {
+          inset = 3;
+          fillStyle = magnetActive ? "#f2c94c" : styles.getPropertyValue("--snake-head").trim();
+        } else if (isTail) {
+          fillStyle = lastPillColor ? lastPillColor : styles.getPropertyValue("--snake").trim();
+          const centerX = part.x * cell + cell / 2;
+          const centerY = part.y * cell + cell / 2;
+          const towardHead = snake[index - 1] || part;
+          const angle = Math.atan2(towardHead.y - part.y, towardHead.x - part.x) + Math.PI / 2;
+          const size = cell - 12;
+          ctx.fillStyle = fillStyle;
+          ctx.save();
+          ctx.translate(centerX, centerY);
+          ctx.rotate(angle);
+          ctx.beginPath();
+          ctx.moveTo(0, -size / 2);
+          ctx.lineTo(size / 2, size / 2);
+          ctx.lineTo(-size / 2, size / 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          return;
+        } else {
+          inset = 4;
+          fillStyle = styles.getPropertyValue("--snake").trim();
+        }
+        const x = part.x * cell + inset;
+        const y = part.y * cell + inset;
+        const size = cell - inset * 2;
+        ctx.fillStyle = fillStyle;
+        roundRect(x, y, size, size, 8);
+        ctx.fill();
+        if (isHead) drawEyes(part, cell);
+      });
+      if (isEating) drawTongue(snake[0], cell);
+    }
+
+    function drawEyes(head, cell) {
+      const centerX = head.x * cell + cell / 2;
+      const centerY = head.y * cell + cell / 2;
+      const offsetX = direction.x * 4;
+      const offsetY = direction.y * 4;
+      const sideX = direction.y * 5;
+      const sideY = direction.x * 5;
+      const styles = getComputedStyle(document.body);
+      ctx.fillStyle = styles.getPropertyValue("--eye-pupil").trim();
+      const eyeSize = 3;
+      if (isDead) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = styles.getPropertyValue("--eye-pupil").trim();
+        const lx = centerX + offsetX + sideX; const ly = centerY + offsetY - sideY;
+        ctx.beginPath(); ctx.moveTo(lx - 2, ly - 2); ctx.lineTo(lx + 2, ly + 2); ctx.moveTo(lx + 2, ly - 2); ctx.lineTo(lx - 2, ly + 2); ctx.stroke();
+        const rx = centerX + offsetX - sideX; const ry = centerY + offsetY + sideY;
+        ctx.beginPath(); ctx.moveTo(rx - 2, ry - 2); ctx.lineTo(rx + 2, ry + 2); ctx.moveTo(rx + 2, ry - 2); ctx.lineTo(rx - 2, ry + 2); ctx.stroke();
+      } else {
+        ctx.fillRect(centerX + offsetX + sideX - eyeSize / 2, centerY + offsetY - sideY - eyeSize / 2, eyeSize, eyeSize);
+        ctx.fillRect(centerX + offsetX - sideX - eyeSize / 2, centerY + offsetY + sideY - eyeSize / 2, eyeSize, eyeSize);
+      }
+    }
+
+    function drawTongue(head, cell) {
+      const styles = getComputedStyle(document.body);
+      ctx.fillStyle = styles.getPropertyValue("--tongue").trim();
+      const tongueWidth = 4; const tongueLength = 12;
+      const headX = head.x * cell; const headY = head.y * cell;
+      let x, y, w, h;
+      if (direction === directions.up) { w = tongueWidth; h = tongueLength; x = headX + cell / 2 - w / 2; y = headY - h + 2; }
+      else if (direction === directions.down) { w = tongueWidth; h = tongueLength; x = headX + cell / 2 - w / 2; y = headY + cell - 2; }
+      else if (direction === directions.left) { w = tongueLength; h = tongueWidth; x = headX - w + 2; y = headY + cell / 2 - h / 2; }
+      else if (direction === directions.right) { w = tongueLength; h = tongueWidth; x = headX + cell - 2; y = headY + cell / 2 - h / 2; }
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawPill(cell) {
+      const px = pill.x * cell + cell / 2;
+      const py = pill.y * cell + cell / 2;
+      const width = cell * 0.74;
+      const height = cell * 0.42;
+      const styles = getComputedStyle(document.body);
+      const sparkleFactor = (Math.sin(pillSparkleAngle) + 1) / 2;
+
+      pillParticles.forEach(p => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.life})`;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+
+      ctx.save();
+      const scale = 1 + sparkleFactor * 0.1;
+      ctx.translate(px, py);
+      ctx.scale(scale, scale);
+      ctx.rotate(-Math.PI / 4);
+      ctx.shadowBlur = 12 * sparkleFactor + 4;
+      ctx.shadowColor = currentPillColor;
+      ctx.fillStyle = styles.getPropertyValue("--pill-light").trim();
+      roundRect(-width / 2, -height / 2, width, height, height / 2);
+      ctx.fill();
+      ctx.save();
+      roundRect(-width / 2, -height / 2, width, height, height / 2);
+      ctx.clip();
+      ctx.fillStyle = currentPillColor;
+      ctx.fillRect(-width / 2, -height / 2, width / 2, height);
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function drawSpecialItem(cell, type) {
+      let item;
+      if (type === "potion") item = specialItem;
+      else if (type === "magnet") item = magnetItem;
+      else if (type === "danger") item = dangerItem;
+      if (!item) return;
+
+      const sx = item.x * cell + cell / 2;
+      const sy = item.y * cell + cell / 2;
+      const styles = getComputedStyle(document.body);
+      const sparkleFactor = (Math.sin(pillSparkleAngle * 1.5) + 1) / 2;
+
+      ctx.save();
+      const scale = 1.1 + sparkleFactor * 0.15;
+      ctx.translate(sx, sy);
+      ctx.scale(scale, scale);
+
+      if (type === "potion") {
+        const itemColor = styles.getPropertyValue("--item-color").trim();
+        ctx.shadowBlur = 15 * sparkleFactor + 5;
+        ctx.shadowColor = itemColor;
+        const w = cell * 0.5; const h = cell * 0.6;
+        ctx.fillStyle = styles.getPropertyValue("--pill-light").trim();
+        roundRect(-w / 2, -h / 4, w, h * 0.7, 4); ctx.fill();
+        ctx.save(); roundRect(-w / 2, -h / 4, w, h * 0.7, 4); ctx.clip();
+        ctx.fillStyle = itemColor; ctx.fillRect(-w / 2, h / 4 - (h * 0.5 * sparkleFactor), w, h); ctx.restore();
+        ctx.fillStyle = styles.getPropertyValue("--pill-light").trim(); ctx.fillRect(-w / 4, -h / 2, w / 2, h / 4);
+        ctx.fillStyle = "#8e44ad"; ctx.fillRect(-w / 3, -h / 1.8, w / 1.5, h / 8);
+      } else if (type === "magnet") {
+        ctx.shadowBlur = 10; ctx.shadowColor = "#f2c94c";
+        ctx.font = `${cell * 0.8}px serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("🧲", 0, 0);
+      } else if (type === "danger") {
+        ctx.shadowBlur = 10; ctx.shadowColor = "#eb5757";
+        ctx.font = `${cell * 0.8}px serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("⚠️", 0, 0);
+      }
+      ctx.restore();
+    }
+
+    function roundRect(x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function requestDirection(newDirection) {
+      const isReverse = direction.x + newDirection.x === 0 && direction.y + newDirection.y === 0;
+      if (!isReverse && (nextDirection.x !== newDirection.x || nextDirection.y !== newDirection.y)) {
+        nextDirection = newDirection;
+        playTurnSound();
+      }
+    }
+
+    function handleKeydown(event) {
+      if (!gameScreen.classList.contains("active")) return;
+      const key = event.key.toLowerCase();
+      const moveKeys = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"];
+      if (!moveKeys.includes(key)) return;
+      event.preventDefault();
+      if (key === "arrowup" || key === "w") requestDirection(directions.up);
+      if (key === "arrowdown" || key === "s") requestDirection(directions.down);
+      if (key === "arrowleft" || key === "a") requestDirection(directions.left);
+      if (key === "arrowright" || key === "d") requestDirection(directions.right);
+    }
+
+    function handleTouchStart(event) {
+      if (!gameScreen.classList.contains("active")) return;
+      const touch = event.changedTouches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }
+
+    function handleTouchMove(event) { if (gameScreen.classList.contains("active")) event.preventDefault(); }
+
+    function handleTouchEnd(event) {
+      if (!gameScreen.classList.contains("active")) return;
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+      // [수정] 민감도를 15로 낮춰 터치가 부드럽게 반응하도록 함
+      const minSwipeDistance = 15;
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < minSwipeDistance) return;
+      if (Math.abs(deltaX) > Math.abs(deltaY)) requestDirection(deltaX > 0 ? directions.right : directions.left);
+      else requestDirection(deltaY > 0 ? directions.down : directions.up);
+    }
+
+    // 초기 실행시 하이스코어 불러오기
+    updateHighScoreUI();
+
+    themeToggle.addEventListener("click", toggleTheme);
+    targetScoreInput.addEventListener("change", () => clampTargetScore(true));
+    targetScoreInput.addEventListener("blur", () => clampTargetScore(true));
+    targetScoreInput.addEventListener("input", () => { targetScoreError.textContent = ""; });
+    startButton.addEventListener("click", startGame);
+    restartButton.addEventListener("click", startGame);
+    homeButton.addEventListener("click", () => { clearInterval(gameTimer); showScreen(startScreen); });
+    window.addEventListener("keydown", handleKeydown, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: false });
+  </script>
+</body>
+
+</html>

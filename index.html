@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI공학개론 — 2026 팀프로젝트</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --border: #e4e8f0;
+      --border-hover: #c7d2e8;
+      --accent: #3b6ff0;
+      --accent2: #7c5ce8;
+      --text: #1a1f2e;
+      --muted: #6b7592;
+      --radius: 14px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+      --shadow-hover: 0 6px 24px rgba(0,0,0,0.11);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 52px 24px 88px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+
+    .klass {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(59,111,240,0.09);
+      padding: 4px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .divider {
+      width: 36px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      margin: 20px auto 0;
+      border-radius: 2px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 22px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.22s, border-color 0.22s, transform 0.22s;
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-3px);
+    }
+
+    .thumb {
+      width: 100%;
+      aspect-ratio: 400 / 220;
+      object-fit: cover;
+      display: block;
+      background: #eef1f8;
+    }
+
+    .card-body {
+      padding: 20px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .team-badge {
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(124,92,232,0.1);
+      padding: 3px 9px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .game-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .game-desc {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    .members {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .member {
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 100px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 9px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      background: var(--bg);
+      border-color: var(--border-hover);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 72px;
+      font-size: 0.77rem;
+      color: #aab0c4;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="klass">AI공학개론 · 2026 Spring · HUFS BME</div>
+    <h1>팀프로젝트 결과물</h1>
+    <p class="subtitle">한국외국어대학교 바이오메디컬공학부 · 7개 팀의 홈페이지 &amp; 게임</p>
+    <div class="divider"></div>
+  </header>
+
+  <div class="grid">
+
+    <!-- TEAM 1 -->
+    <div class="card">
+      <img class="thumb" src="assets/thumb_team1.svg" alt="헬로키티 벽돌깨기 썸네일"/>
+      <div class="card-body">
+        <div class="card-header">
+          <span class="team-badge">Team 1</span>
+          <span class="game-title">헬로키티 벽돌깨기</span>
+        </div>
+        <p class="game-desc">
+          패들로 키티 공을 받아 산리오 캐릭터 벽돌을 모두 깨고 탈출하는 Breakout 게임.
+          헬로키티 세계관을 담아 재해석했다.
+        </p>
+        <div class="members">
+          <span class="member">황지민</span><span class="member">이서영</span><span class="member">임정연</span><span class="member">김현경</span><span class="member">황보명훈</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="GAME/TEAM1/" target="_blank">🎮 게임 플레이</a>
+          <a class="btn btn-outline" href="https://whfodeejr-glitch.github.io/-/" target="_blank">🔗 홈페이지</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM 2 -->
+    <div class="card">
+      <img class="thumb" src="assets/thumb_team2.svg" alt="3D 바운스볼 썸네일"/>
+      <div class="card-body">
+        <div class="card-header">
+          <span class="team-badge">Team 2</span>
+          <span class="game-title">3D 바운스볼</span>
+        </div>
+        <p class="game-desc">
+          클래식 모바일 게임 '바운스 볼'을 3D 환경으로 재해석.
+          X·Y·Z 세 축으로 확장된 입체 공간에서 정밀한 컨트롤을 요구하는 리메이크 작품.
+        </p>
+        <div class="members">
+          <span class="member">조용화</span><span class="member">권태윤</span><span class="member">박서연</span><span class="member">손아림</span><span class="member">김동욱</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="GAME/TEAM2/" target="_blank">🎮 게임 플레이</a>
+          <a class="btn btn-outline" href="https://rejoy-tech.github.io/-/" target="_blank">🔗 홈페이지</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM 3 -->
+    <div class="card">
+      <img class="thumb" src="assets/thumb_team3.svg" alt="Snake Pill 썸네일"/>
+      <div class="card-body">
+        <div class="card-header">
+          <span class="team-badge">Team 3</span>
+          <span class="game-title">Snake Pill</span>
+        </div>
+        <p class="game-desc">
+          알약·포션·자석·위험 아이템이 등장하는 스네이크 게임.
+          목표 점수·속도 자유 설정, 다크/라이트 모드 지원, 베스트 스코어 로컬 저장.
+        </p>
+        <div class="members">
+          <span class="member">박재현</span><span class="member">박예성</span><span class="member">박태헌</span><span class="member">강수연</span><span class="member">서채린</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="GAME/TEAM3/" target="_blank">🎮 게임 플레이</a>
+          <a class="btn btn-outline" href="https://woguspark123.github.io/team3_Crayon_Shin-Chan_version_2nd_ed/" target="_blank">🔗 홈페이지</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM 4 -->
+    <div class="card">
+      <img class="thumb" src="assets/thumb_team4.svg" alt="하리보 크러쉬 사가 썸네일"/>
+      <div class="card-body">
+        <div class="card-header">
+          <span class="team-badge">Team 4</span>
+          <span class="game-title">하리보 크러쉬 사가</span>
+        </div>
+        <p class="game-desc">
+          하리보 젤리를 3개 맞추는 퍼즐 게임. 슬롯처럼 역동적으로 터지는
+          연쇄 콤보로 짜릿한 손맛을 선사한다. 🐻
+        </p>
+        <div class="members">
+          <span class="member">이지민</span><span class="member">임정규</span><span class="member">조연선</span><span class="member">김서영</span><span class="member">최현민</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="GAME/TEAM4/" target="_blank">🎮 게임 플레이</a>
+          <a class="btn btn-outline" href="https://yummyyy1.github.io/team4/" target="_blank">🔗 홈페이지</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM 5 -->
+    <div class="card">
+      <img class="thumb" src="assets/thumb_team5.svg" alt="하트 슈팅 갤러그 썸네일"/>
+      <div class="card-body">
+        <div class="card-header">
+          <span class="team-badge">Team 5</span>
+          <span class="game-title">하트 슈팅 갤러그</span>
+        </div>
+        <p class="game-desc">
+          갤러그를 파워퍼프걸 세계관으로 재해석. 캐릭터를 선택해 하트 탄환으로
+          각 스테이지 보스를 격파. 리스크-리턴 전략 요소가 살아있는 슈팅 게임.
+        </p>
+        <div class="members">
+          <span class="member">조영웅</span><span class="member">박선주</span><span class="member">박효빈</span><span class="member">신가연</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="GAME/TEAM5/" target="_blank">🎮 게임 플레이</a>
+          <a class="btn btn-outline" href="https://chohero1234.github.io/real-real-final/" target="_blank">🔗 홈페이지</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM 6 -->
+    <div class="card">
+      <img class="thumb" src="assets/thumb_team6.svg" alt="행성 합성 게임 썸네일"/>
+      <div class="card-body">
+        <div class="card-header">
+          <span class="team-badge">Team 6</span>
+          <span class="game-title">행성 합성 게임</span>
+        </div>
+        <p class="game-desc">
+          '수박게임'을 우주 콘셉트로 재해석. 같은 행성을 합쳐 더 큰 행성으로 진화시키며,
+          콤보 시스템과 블랙홀·운석 이벤트로 긴장감을 더했다.
+        </p>
+        <div class="members">
+          <span class="member">정윤채</span><span class="member">김시영</span><span class="member">권세준</span><span class="member">김가영</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="GAME/TEAM6/" target="_blank">🎮 게임 플레이</a>
+          <a class="btn btn-outline" href="https://myallyjung.github.io/FINAL-/" target="_blank">🔗 홈페이지</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM 7 -->
+    <div class="card">
+      <img class="thumb" src="assets/thumb_team7.svg" alt="과제 피하기 & 지각 달리기 썸네일"/>
+      <div class="card-body">
+        <div class="card-header">
+          <span class="team-badge">Team 7</span>
+          <span class="game-title">과제 피하기 &amp; 지각 달리기</span>
+        </div>
+        <p class="game-desc">
+          ① 하늘에서 떨어지는 과제·팀플·시험을 좌우로 피하는 Kaboom! 오마주.
+          ② 인터넷이 끊기며 전환되는 크롬 공룡 스타일 횡스크롤 달리기. 강의실 도착이 목표!
+        </p>
+        <div class="members">
+          <span class="member">이윤하</span><span class="member">최형우</span><span class="member">김예슬</span><span class="member">방상훈</span><span class="member">김지은</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="GAME/TEAM7/" target="_blank">🎮 게임 플레이</a>
+          <a class="btn btn-outline" href="https://rejoy-tech.github.io/7-/" target="_blank">🔗 홈페이지</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    한국외국어대학교 바이오메디컬공학부 · AI공학개론 2026 Spring
+  </footer>
+
+</body>
+</html>

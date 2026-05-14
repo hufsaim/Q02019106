@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sanrio Breakout Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            /* 깃허브 환경에 맞게 로컬 이미지 파일 경로로 수정 */
+            background-image: url('./background.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%237cc0ff'><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>") 12 12, auto;
+        }
+
+        button, a {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='%234da6ff'><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>") 14 14, pointer !important;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: backdrop-filter 0.5s ease;
+        }
+
+        /* 게임 중일 때 배경에 아주 살짝 들어가는 블러 효과 */
+        .game-playing-blur {
+            backdrop-filter: blur(2px);
+        }
+
+        canvas {
+            background-color: rgba(245, 250, 255, 0.95); /* 따뜻한 하늘빛 도는 부드러운 흰색 */
+            background-image: radial-gradient(#cce6ff 15%, transparent 16%), radial-gradient(#cce6ff 15%, transparent 16%);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            border: 6px solid #a2d2ff;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(162, 210, 255, 0.4);
+            max-width: 95vw;
+            max-height: 70vh;
+        }
+
+        .ui-panel {
+            width: 95vw;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 20px;
+            margin-bottom: 15px;
+            border: 3px solid #a2d2ff;
+            z-index: 5;
+        }
+
+        .btn-fancy {
+            background: linear-gradient(135deg, #a2d2ff 0%, #7cc0ff 100%);
+            color: white;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 15px rgba(124, 192, 255, 0.3);
+        }
+
+        .btn-fancy:hover:not(:disabled) {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(124, 192, 255, 0.5);
+        }
+
+        .btn-powerup {
+            background: linear-gradient(135deg, #c8b6ff 0%, #b19cd9 100%);
+            border-color: #f3e8ff;
+        }
+
+        .btn-music {
+            background: linear-gradient(135deg, #a2d2ff 0%, #70a1ff 100%);
+            padding: 8px 15px;
+            font-size: 0.875rem;
+        }
+
+        .btn-fancy:disabled {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        #message-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            background: rgba(240, 248, 255, 0.5); /* 여린 하늘빛 반투명 배경 */
+            /* 시작 화면을 위해 블러 제거 */
+        }
+
+        .sanrio-card {
+            background: rgba(248, 252, 255, 0.98); /* 흰색에 가까운 아주 연한 하늘색 배경 */
+            border-radius: 30px;
+            border: 6px solid #cce6ff; /* 기존보다 더 연한 솜사탕 하늘색 테두리 */
+            box-shadow: 0 15px 30px rgba(204, 230, 255, 0.4), inset 0 0 0 4px #fff, inset 0 0 0 7px #f0f8ff; /* 이중 테두리와 뽀얀 그림자 효과 */
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 450px;
+            width: 90vw;
+            position: relative;
+            text-align: center;
+        }
+
+        .sanrio-title {
+            color: #7bb5ff; /* 조금 더 연해진 파스텔 블루 */
+            text-shadow: 2px 2px 0px #f0f8ff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+            font-weight: bold;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #9fd4ff 0%, #7bb5ff 100%); /* 부드러운 하늘빛 그라데이션 */
+            color: white;
+            padding: 10px 35px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: 3px solid #fff;
+            box-shadow: 0 6px 15px rgba(123, 181, 255, 0.4), inset 0 -3px 0 rgba(0,0,0,0.1);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 15px;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(123, 181, 255, 0.5), inset 0 -3px 0 rgba(0,0,0,0.1);
+        }
+
+        .btn-start:active {
+            transform: translateY(2px) scale(0.98);
+            box-shadow: 0 4px 10px rgba(123, 181, 255, 0.4), inset 0 -1px 0 rgba(0,0,0,0.1);
+        }
+
+        .controls-box {
+            background: #f8fbff;
+            border: 2px dashed #cce6ff;
+            color: #8bc3ff;
+            padding: 12px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .ai-comment-box {
+            background: #f8fbff;
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 3px solid #cce6ff;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            max-width: 300px;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 8px 20px rgba(204, 230, 255, 0.3);
+            color: #7bb5ff;
+            font-size: 0.95rem; /* 글씨 크기를 1.05rem에서 0.85rem으로 줄였습니다 */
+        }
+
+        /* 말풍선 꼬리 효과 (바깥쪽 테두리) */
+        .ai-comment-box::after {
+            content: '';
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 16px 16px 16px;
+            border-style: solid;
+            border-color: transparent transparent #cce6ff transparent;
+            display: block;
+            width: 0;
+        }
+
+        /* 말풍선 꼬리 효과 (안쪽 색상) */
+        .ai-comment-box::before {
+            content: '';
+            position: absolute;
+            top: -11px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 13px 13px 13px;
+            border-style: solid;
+            border-color: transparent transparent #f8fbff transparent;
+            display: block;
+            width: 0;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .hidden { display: none !important; }
+
+        #ai-loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(162, 210, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #a2d2ff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="top-ui" class="ui-panel text-xl text-blue-400 hidden">
+        <div class="flex flex-col">
+            <div>점수: <span id="score">0</span></div>
+            <div>목숨: <span id="lives">5</span></div>
+        </div>
+        <div class="flex flex-col gap-2">
+            <button id="paddle-powerup-btn" class="btn-fancy btn-powerup text-sm px-4 py-1">
+                ✨ 패들 확장
+            </button>
+            <button id="music-toggle-btn" class="btn-fancy btn-music text-xs px-4 py-1">
+                🎵 BGM 끄기
+            </button>
+        </div>
+    </div>
+
+    <div id="message-overlay">
+        <div class="sanrio-card">
+            <h1 id="msg-title" class="sanrio-title">Sanrio Dream Land</h1>
+            <p id="msg-desc" class="text-base text-blue-300 mb-4">귀여운 키티와 함께 벽돌을 깨고 탈출해보세요!</p>
+            
+            <div id="ai-feedback" class="ai-comment-box hidden text-center">
+                <div id="ai-text">Gemini가 분석 중...</div>
+                <div id="ai-loading-spinner" class="mt-2 hidden"><div id="ai-loading"></div></div>
+            </div>
+
+            <button id="start-btn" class="btn-start">게임시작 ✨</button>
+            
+            <div id="controls-info" class="controls-box">
+                <p>💻 마우스 이동 / 📱 터치 드래그</p>
+                <p class="mt-2 text-blue-400 font-bold">✨ 키티 공을 떨어뜨리지 않게 조심하세요!</p>
+            </div>
+            <button id="main-music-btn" class="mt-4 text-blue-300 text-sm underline hover:text-blue-500 transition-colors">BGM 설정: ON</button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" class="hidden"></canvas>
+</div>
+
+<script>
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'sanrio-breakout-ai';
+
+    const canvas = document.getElementById('gameCanvas');
+    const gameContainer = document.getElementById('game-container'); // 추가된 부분
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+    const livesElement = document.getElementById('lives');
+    const startBtn = document.getElementById('start-btn');
+    const overlay = document.getElementById('message-overlay');
+    const topUi = document.getElementById('top-ui');
+    const msgTitle = document.getElementById('msg-title');
+    const msgDesc = document.getElementById('msg-desc');
+    const aiFeedback = document.getElementById('ai-feedback');
+    const aiText = document.getElementById('ai-text');
+    const aiLoadingSpinner = document.getElementById('ai-loading-spinner');
+    const paddlePowerupBtn = document.getElementById('paddle-powerup-btn');
+    const musicToggleBtn = document.getElementById('music-toggle-btn');
+    const mainMusicBtn = document.getElementById('main-music-btn');
+
+    let score = 0;
+    let lives = 5; 
+    let gameState = 'ready';
+    let paddlePowerupAvailable = true;
+    let musicEnabled = true;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let bgmInterval = null;
+
+    function playTone(freq, type, duration, volume = 0.1) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + duration);
+    }
+
+    const sanrioTheme = [
+        [523.25, 0.15], [659.25, 0.15], [783.99, 0.15], [659.25, 0.15], [1046.50, 0.3], [783.99, 0.3],
+        [523.25, 0.15], [659.25, 0.15], [783.99, 0.15], [659.25, 0.15], [880.00, 0.3], [783.99, 0.3],
+        [698.46, 0.15], [659.25, 0.15], [587.33, 0.15], [659.25, 0.15], [698.46, 0.15], [783.99, 0.15], [659.25, 0.15], [523.25, 0.15],
+        [587.33, 0.15], [392.00, 0.15], [587.33, 0.15], [659.25, 0.15], [523.25, 0.6]
+    ];
+    let noteIndex = 0;
+
+    function playBGM() {
+        if (!musicEnabled) return;
+        const [freq, duration] = sanrioTheme[noteIndex];
+        playTone(freq, 'sine', duration + 0.1, 0.05);
+        noteIndex = (noteIndex + 1) % sanrioTheme.length;
+        bgmInterval = setTimeout(playBGM, duration * 1000 + 50);
+    }
+
+    function startGlobalBGM() {
+        if (bgmInterval) clearTimeout(bgmInterval);
+        playBGM();
+    }
+
+    function stopBGM() {
+        if (bgmInterval) {
+            clearTimeout(bgmInterval);
+            bgmInterval = null;
+        }
+    }
+
+    const soundEffects = {
+        bounce: () => {
+            playTone(600, 'sine', 0.05);
+            setTimeout(() => playTone(900, 'sine', 0.1), 50);
+        },
+        brick: () => {
+            playTone(800, 'sine', 0.05);
+            setTimeout(() => playTone(1200, 'sine', 0.1), 50);
+        },
+        paddle: () => {
+            playTone(400, 'sine', 0.05);
+            setTimeout(() => playTone(700, 'sine', 0.1), 50);
+        },
+        fail: () => {
+            playTone(300, 'sawtooth', 0.2);
+            setTimeout(() => playTone(200, 'sawtooth', 0.3), 150);
+        },
+        powerup: () => {
+            playTone(500, 'sine', 0.1);
+            setTimeout(() => playTone(700, 'sine', 0.1), 100);
+            setTimeout(() => playTone(900, 'sine', 0.2), 200);
+        }
+    };
+
+    function toggleMusic() {
+        musicEnabled = !musicEnabled;
+        musicToggleBtn.innerText = musicEnabled ? "🎵 BGM 끄기" : "🔇 BGM 켜기";
+        mainMusicBtn.innerText = `BGM 설정: ${musicEnabled ? 'ON' : 'OFF'}`;
+        if (!musicEnabled) stopBGM();
+        else startGlobalBGM();
+    }
+
+    musicToggleBtn.addEventListener('click', toggleMusic);
+    mainMusicBtn.addEventListener('click', toggleMusic);
+
+    const initAudioTrigger = () => {
+        if (musicEnabled && !bgmInterval) startGlobalBGM();
+        document.removeEventListener('mousedown', initAudioTrigger);
+        document.removeEventListener('touchstart', initAudioTrigger);
+    };
+    document.addEventListener('mousedown', initAudioTrigger);
+    document.addEventListener('touchstart', initAudioTrigger);
+
+    const themes = [
+        { name: '포차코', color: '#e0f2f1', emoji: '🐶' },
+        { name: '마이멜로디', color: '#ff92a9', emoji: '🌸' },
+        { name: '쿠로미', color: '#333333', emoji: '😈' }, 
+        { name: '시나모롤', color: '#ffffff', emoji: '☁️' },
+        { name: '폼폼푸린', color: '#ffd93d', emoji: '🍮' }
+    ];
+
+    let ball = { x: 0, y: 0, dx: 4, dy: -4, radius: 14, color: '#ffffff' };
+    let paddle = { height: 18, width: 110, originalWidth: 110, x: 0, color: '#a2d2ff' };
+    let bricks = [];
+    const brickRowCount = 5;
+    const brickColumnCount = 6;
+    const brickPadding = 12;
+    const brickOffsetTop = 50;
+    const brickOffsetLeft = 20;
+
+    function resizeCanvas() {
+        const containerWidth = window.innerWidth * 0.95;
+        const containerHeight = window.innerHeight * 0.7;
+        canvas.width = Math.min(containerWidth, 600);
+        canvas.height = Math.min(containerHeight, 500);
+        if (bricks.length > 0) initBricksPosition();
+    }
+
+    function generateFeedback(finalScore, isWin) {
+        aiFeedback.classList.remove('hidden');
+        aiLoadingSpinner.classList.add('hidden'); // 로딩 스피너 숨김
+        
+        const winMessages = [
+            "우와, 다 깼어! 정말 멋지다멍! 🐶",
+            "대단해! 네가 최고야! 🌸",
+            "흥, 제법이네! 칭찬해 줄게! 😈",
+            "정말 잘했어! 폭신폭신 기분 좋아~ ☁️",
+            "완벽해! 상으로 푸딩을 줄게! 🍮"
+        ];
+
+        const loseMessages = [
+            "아쉽다멍.. 다음엔 꼭 깰 수 있을 거야! 🐶",
+            "울지마! 내가 응원할게! 🌸",
+            "포기하지 마! 다시 도전해보자! 😈",
+            "괜찮아~ 쉬었다가 다시 해보자! ☁️",
+            "조금만 더 하면 됐는데! 다시 해보자! 🍮"
+        ];
+
+        // 승리/패배 여부에 따라 메시지 목록 선택 후 무작위로 하나 뽑기
+        const messages = isWin ? winMessages : loseMessages;
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+        aiText.innerText = `[최종 점수: ${finalScore}점]\n${randomMessage}`;
+    }
+
+    function initBricks() {
+        bricks = [];
+        
+        // 1. 캐릭터별로 균등한 개수의 배열 생성 (총 30개 = 5종류 * 6개씩)
+        let themePool = [];
+        const totalBricks = brickRowCount * brickColumnCount;
+        const countPerTheme = Math.floor(totalBricks / themes.length);
+        
+        for (let i = 0; i < themes.length; i++) {
+            for (let j = 0; j < countPerTheme; j++) {
+                themePool.push(themes[i]);
+            }
+        }
+        
+        // 2. 생성된 배열을 무작위로 섞기 (Fisher-Yates Shuffle)
+        for (let i = themePool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [themePool[i], themePool[j]] = [themePool[j], themePool[i]];
+        }
+
+        // 3. 섞인 캐릭터 배열을 바탕으로 벽돌 배치
+        let poolIndex = 0;
+        for (let c = 0; c < brickColumnCount; c++) {
+            bricks[c] = [];
+            for (let r = 0; r < brickRowCount; r++) {
+                bricks[c][r] = { x: 0, y: 0, status: 1, theme: themePool[poolIndex++] };
+            }
+        }
+        initBricksPosition();
+    }
+
+    function initBricksPosition() {
+        const availableWidth = canvas.width - (brickOffsetLeft * 2);
+        const bWidth = (availableWidth - (brickPadding * (brickColumnCount - 1))) / brickColumnCount;
+        const bHeight = 28;
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                bricks[c][r].x = (c * (bWidth + brickPadding)) + brickOffsetLeft;
+                bricks[c][r].y = (r * (bHeight + brickPadding)) + brickOffsetTop;
+            }
+        }
+    }
+
+    function movePaddle(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        let relativeX = (clientX - rect.left) * scaleX;
+        if (relativeX > 0 && relativeX < canvas.width) {
+            paddle.x = relativeX - paddle.width / 2;
+        }
+    }
+
+    document.addEventListener("mousemove", (e) => movePaddle(e.clientX));
+    document.addEventListener("touchmove", (e) => {
+        movePaddle(e.touches[0].clientX);
+        e.preventDefault();
+    }, { passive: false });
+
+    function drawBallCharacter(x, y, radius) {
+        ctx.save();
+        ctx.translate(x, y);
+        
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radius * 1.2, radius, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(-radius * 0.8, -radius * 0.4);
+        ctx.lineTo(-radius * 1.1, -radius * 1.1);
+        ctx.lineTo(-radius * 0.4, -radius * 0.8);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(radius * 0.8, -radius * 0.4);
+        ctx.lineTo(radius * 1.1, -radius * 1.1);
+        ctx.lineTo(radius * 0.4, -radius * 0.8);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(radius * 0.7, -radius * 0.7, radius * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = "#ff4d6d";
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(radius * 0.4, -radius * 0.9, radius * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(radius * 1.0, -radius * 0.5, radius * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(-radius * 0.4, -radius * 0.1, radius * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(radius * 0.4, -radius * 0.1, radius * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(0, radius * 0.1, radius * 0.15, radius * 0.1, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffd93d";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(-radius * 0.8, 0); ctx.lineTo(-radius * 1.3, -radius * 0.1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-radius * 0.8, radius * 0.2); ctx.lineTo(-radius * 1.3, radius * 0.2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(radius * 0.8, 0); ctx.lineTo(radius * 1.3, -radius * 0.1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(radius * 0.8, radius * 0.2); ctx.lineTo(radius * 1.3, radius * 0.2); ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawPompompurinBrick(x, y, width, height) {
+        ctx.save();
+        ctx.translate(x + width/2, y + height/2);
+
+        ctx.beginPath();
+        ctx.roundRect(-width/2, -height/2, width, height, 10);
+        ctx.fillStyle = "#ffd93d";
+        ctx.fill();
+        ctx.strokeStyle = "#8b4513";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(-width/2.5, -height/4, width/8, height/4, Math.PI/10, 0, Math.PI*2);
+        ctx.fillStyle = "#ffd93d";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(width/2.5, -height/4, width/8, height/4, -Math.PI/10, 0, Math.PI*2);
+        ctx.fillStyle = "#ffd93d";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(0, -height/2.2, width/4, height/6, 0, 0, Math.PI*2);
+        ctx.fillStyle = "#8b4513";
+        ctx.fill();
+
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(-width/6, 0, width/30, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(width/6, 0, width/30, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(0, height/10, width/40, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(-width/20, height/6, width/40, Math.PI, 0, true);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(width/20, height/6, width/40, Math.PI, 0, true);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawCinnamorollBrick(x, y, width, height) {
+        ctx.save();
+        ctx.translate(x + width/2, y + height/2);
+
+        ctx.beginPath();
+        ctx.roundRect(-width/2, -height/2, width, height, 10);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = "#a2d2ff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(-width/2.2, 0, width/6, height/2.5, 0, 0, Math.PI*2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(width/2.2, 0, width/6, height/2.5, 0, 0, Math.PI*2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#a2d2ff";
+        ctx.beginPath();
+        ctx.arc(-width/6, 0, width/25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(width/6, 0, width/25, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#a2d2ff";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(-width/40, height/6, width/40, Math.PI, 0, true);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(width/40, height/6, width/40, Math.PI, 0, true);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255, 182, 193, 0.5)";
+        ctx.beginPath();
+        ctx.ellipse(-width/4, height/6, width/10, height/8, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(width/4, height/6, width/10, height/8, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawKuromiBrick(x, y, width, height) {
+        ctx.save();
+        ctx.translate(x + width/2, y + height/2);
+
+        ctx.beginPath();
+        ctx.roundRect(-width/2, -height/2, width, height, 10);
+        ctx.fillStyle = "#333333";
+        ctx.fill();
+        ctx.strokeStyle = "#c8b6ff";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = "#333333";
+        ctx.beginPath();
+        ctx.moveTo(-width/2.2, -height/2.2);
+        ctx.lineTo(-width/2.5, -height/1.1);
+        ctx.lineTo(-width/4, -height/2.2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(width/2.2, -height/2.2);
+        ctx.lineTo(width/2.5, -height/1.1);
+        ctx.lineTo(width/4, -height/2.2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, height/4);
+        ctx.bezierCurveTo(-width/3, height/4, -width/2.2, -height/10, -width/5, -height/6);
+        ctx.bezierCurveTo(-width/10, -height/4, width/10, -height/4, width/5, -height/6);
+        ctx.bezierCurveTo(width/2.2, -height/10, width/3, height/4, 0, height/4);
+        ctx.fillStyle = "white";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(0, -height/3.5, width/12, 0, Math.PI * 2);
+        ctx.fillStyle = "#ff8fab";
+        ctx.fill();
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(-2, -height/3.5, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(2, -height/3.5, 1.5, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.ellipse(-width/7, -height/15, width/22, height/9, Math.PI/12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(width/7, -height/15, width/22, height/9, -Math.PI/12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ff8fab";
+        ctx.beginPath();
+        ctx.arc(0, height/12, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-2, height/6);
+        ctx.lineTo(0, height/5);
+        ctx.lineTo(2, height/6);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawMyMelodyBrick(x, y, width, height) {
+        ctx.save();
+        ctx.translate(x + width/2, y + height/2);
+
+        // 분홍색 두건 몸체
+        ctx.beginPath();
+        ctx.roundRect(-width/2, -height/2, width, height, 10);
+        ctx.fillStyle = "#ff92a9";
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 긴 귀 (위로 솟은 귀)
+        ctx.fillStyle = "#ff92a9";
+        ctx.beginPath();
+        // 왼쪽 귀 (곧게)
+        ctx.ellipse(-width/3, -height/2, width/8, height/2, -0.1, 0, Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 오른쪽 귀 (살짝 안으로 꺾인 모양)
+        ctx.beginPath();
+        ctx.ellipse(width/3.5, -height/2.5, width/8, height/3.5, 0.4, 0, Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 얼굴 흰색 영역 (전형적인 마이멜로디 얼굴 실루엣)
+        ctx.beginPath();
+        ctx.ellipse(0, height/8, width/2.4, height/3, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+
+        // 노란색 작은 코
+        ctx.beginPath();
+        ctx.ellipse(0, height/6, width/18, width/25, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffd93d";
+        ctx.fill();
+        ctx.strokeStyle = "#5d4037";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        // 갈색/검은색 타원형 눈
+        ctx.fillStyle = "#5d4037";
+        ctx.beginPath();
+        ctx.ellipse(-width/7, height/8, width/35, height/12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(width/7, height/8, width/35, height/12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 시그니처 꽃 장식 (왼쪽 상단 귀 근처)
+        const flowerX = -width/3.5;
+        const flowerY = -height/5;
+        ctx.beginPath();
+        // 꽃잎 5개 표현 (간단히 겹쳐진 원)
+        for(let i=0; i<5; i++) {
+            const angle = (i * Math.PI * 2) / 5;
+            ctx.arc(flowerX + Math.cos(angle)*5, flowerY + Math.sin(angle)*5, 4, 0, Math.PI*2);
+        }
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.strokeStyle = "#ff92a9";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        
+        // 꽃술 (노란색)
+        ctx.beginPath();
+        ctx.arc(flowerX, flowerY, 3, 0, Math.PI*2);
+        ctx.fillStyle = "#ffd93d";
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawPochaccoBrick(x, y, width, height) {
+        ctx.save();
+        ctx.translate(x + width/2, y + height/2);
+
+        // 하얀색 베이스 (포차코 얼굴)
+        ctx.beginPath();
+        ctx.roundRect(-width/2, -height/2, width, height, 10);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = "#4db6ac";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 까만색 처진 귀
+        ctx.fillStyle = "#333333";
+        ctx.beginPath();
+        ctx.ellipse(-width/2.5, -height/8, width/8, height/3, 0.2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(width/2.5, -height/8, width/8, height/3, -0.2, 0, Math.PI*2);
+        ctx.fill();
+
+        // 까만 코
+        ctx.beginPath();
+        ctx.ellipse(0, height/8, width/20, height/15, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // 작은 눈
+        ctx.beginPath();
+        ctx.ellipse(-width/7, -height/10, width/35, height/12, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(width/7, -height/10, width/35, height/12, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // 핑크색 볼터치
+        ctx.fillStyle = "rgba(255, 182, 193, 0.6)";
+        ctx.beginPath();
+        ctx.ellipse(-width/4, height/10, width/12, height/10, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(width/4, height/10, width/12, height/10, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    function draw() {
+        if (gameState !== 'playing') return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const availableWidth = canvas.width - (brickOffsetLeft * 2);
+        const bWidth = (availableWidth - (brickPadding * (brickColumnCount - 1))) / brickColumnCount;
+        const bHeight = 28;
+        
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                if (bricks[c][r].status === 1) {
+                    let b = bricks[c][r];
+                    
+                    if (b.theme.name === '폼폼푸린') {
+                        drawPompompurinBrick(b.x, b.y, bWidth, bHeight);
+                    } else if (b.theme.name === '시나모롤') {
+                        drawCinnamorollBrick(b.x, b.y, bWidth, bHeight);
+                    } else if (b.theme.name === '쿠로미') {
+                        drawKuromiBrick(b.x, b.y, bWidth, bHeight);
+                    } else if (b.theme.name === '마이멜로디') {
+                        drawMyMelodyBrick(b.x, b.y, bWidth, bHeight);
+                    } else if (b.theme.name === '포차코') {
+                        drawPochaccoBrick(b.x, b.y, bWidth, bHeight);
+                    } else {
+                        ctx.beginPath();
+                        ctx.roundRect(b.x, b.y, bWidth, bHeight, 10);
+                        ctx.fillStyle = b.theme.color;
+                        ctx.fill();
+                        ctx.font = "16px Arial";
+                        ctx.fillStyle = "white";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(b.theme.emoji, b.x + bWidth/2, b.y + bHeight/2 + 2);
+                    }
+                    
+                    if (ball.x > b.x && ball.x < b.x + bWidth && ball.y > b.y && ball.y < b.y + bHeight) {
+                        ball.dy = -ball.dy;
+                        b.status = 0;
+                        score += 10;
+                        scoreElement.innerText = score;
+                        soundEffects.brick();
+                        if (score === brickRowCount * brickColumnCount * 10) victory();
+                    }
+                }
+            }
+        }
+
+        drawBallCharacter(ball.x, ball.y, ball.radius);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(paddle.x, canvas.height - paddle.height - 15, paddle.width, paddle.height, 12);
+        ctx.fillStyle = paddle.color;
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+
+        if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+            ball.dx = -ball.dx;
+            soundEffects.bounce();
+        }
+        if (ball.y + ball.dy < ball.radius) {
+            ball.dy = -ball.dy;
+            soundEffects.bounce();
+        } else if (ball.y + ball.dy > canvas.height - ball.radius - 15) {
+            if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                ball.dy = -Math.abs(ball.dy);
+                let hitPos = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                ball.dx = hitPos * 5;
+                soundEffects.paddle();
+            } else if (ball.y + ball.dy > canvas.height) {
+                lives--;
+                livesElement.innerText = lives;
+                soundEffects.fail();
+                if (lives <= 0) gameOver();
+                else resetBall();
+            }
+        }
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+        requestAnimationFrame(draw);
+    }
+
+    function resetBall() {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height - 50;
+        ball.dx = (Math.random() - 0.5) * 6;
+        ball.dy = -5;
+        paddle.x = (canvas.width - paddle.width) / 2;
+    }
+
+    function gameOver() {
+        gameState = 'over';
+        gameContainer.classList.remove('game-playing-blur'); // 배경 블러 효과 제거
+        canvas.classList.add('hidden');
+        topUi.classList.add('hidden');
+        msgTitle.innerText = "Game Over 💔";
+        msgDesc.classList.add('hidden');
+        overlay.classList.remove('hidden');
+        generateFeedback(score, false);
+    }
+
+    function victory() {
+        gameState = 'over';
+        gameContainer.classList.remove('game-playing-blur'); // 배경 블러 효과 제거
+        canvas.classList.add('hidden');
+        topUi.classList.add('hidden');
+        msgTitle.innerText = "Victory! 🏆";
+        msgDesc.classList.add('hidden');
+        overlay.classList.remove('hidden');
+        generateFeedback(score, true);
+    }
+
+    function startGame() {
+        score = 0;
+        lives = 5; 
+        paddlePowerupAvailable = true;
+        paddlePowerupBtn.disabled = false;
+        paddle.width = paddle.originalWidth;
+        scoreElement.innerText = score;
+        livesElement.innerText = lives;
+        aiFeedback.classList.add('hidden');
+        resizeCanvas();
+        initBricks();
+        resetBall();
+        
+        gameContainer.classList.add('game-playing-blur'); // 게임 시작 시 배경 블러 추가
+        
+        overlay.classList.add('hidden');
+        canvas.classList.remove('hidden');
+        topUi.classList.remove('hidden');
+        gameState = 'playing';
+        if (musicEnabled && !bgmInterval) startGlobalBGM();
+        draw();
+    }
+
+    paddlePowerupBtn.addEventListener('click', () => {
+        if (!paddlePowerupAvailable) return;
+        paddlePowerupAvailable = false;
+        paddlePowerupBtn.disabled = true;
+        soundEffects.powerup();
+        const originalWidth = paddle.width;
+        paddle.width *= 1.8;
+        setTimeout(() => { paddle.width = originalWidth; }, 5000);
+    });
+
+    startBtn.addEventListener('click', startGame);
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+</script>
+</body>
+</html>

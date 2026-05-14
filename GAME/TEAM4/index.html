@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haribo Crush Saga</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&display=swap');
+        :root { --haribo-red: #e30613; --haribo-yellow: #ffcc00; --bg: #0f0f0f; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Jua', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        nav { width: 100%; background: rgba(0,0,0,0.8); padding: 15px 0; text-align: center; border-bottom: 4px solid var(--haribo-yellow); }
+        nav h1 { margin: 0; font-family: 'Black Han Sans', sans-serif; color: var(--haribo-yellow); text-shadow: 2px 2px var(--haribo-red); }
+        .game-area { margin-top: 30px; position: relative; border: 8px solid var(--haribo-yellow); border-radius: 25px; overflow: hidden; background: #000; }
+        canvas { display: block; cursor: pointer; background: #222; }
+        .ui { margin-top: 20px; text-align: center; }
+        .score { font-size: 3rem; color: var(--haribo-yellow); }
+        .btn { background: var(--haribo-red); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 1.5rem; font-family: 'Jua'; cursor: pointer; margin-top: 10px; box-shadow: 0 5px 0 #9e040d; }
+    </style>
+</head>
+<body>
+    <nav><h1>HARIBO CRUSH</h1></nav>
+    <div class="game-area"><canvas id="gameCanvas" width="400" height="400"></canvas></div>
+    <div class="ui">
+        <div id="combo" style="color: #4CD964; height: 30px; font-size: 1.5rem;"></div>
+        <div class="score">SCORE: <span id="scoreVal">0</span></div>
+        <button class="btn" onclick="initGame()">다시 시작</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('scoreVal'), comboEl = document.getElementById('combo');
+        const GRID = 8, TILE = 50, COLORS = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#FFFFFF', '#FF2D55'];
+        let board = [], score = 0, selected = null, particles = [], isProcessing = false;
+
+        class P {
+            constructor(x, y, c) { this.x = x; this.y = y; this.c = c; this.vx = (Math.random()-0.5)*12; this.vy = (Math.random()-0.5)*12; this.l = 1.0; }
+            u() { this.x += this.vx; this.y += this.vy; this.vy += 0.3; this.l -= 0.03; }
+            d() { ctx.globalAlpha = this.l; ctx.fillStyle = this.c; ctx.beginPath(); ctx.arc(this.x, this.y, 4, 0, 7); ctx.fill(); }
+        }
+
+        function initGame() {
+            score = 0; scoreEl.innerText = score;
+            board = Array.from({length: GRID}, () => Array.from({length: GRID}, () => ({ color: COLORS[Math.floor(Math.random()*6)], spin: false })));
+            setTimeout(autoMatch, 500);
+        }
+
+        function autoMatch() {
+            let m = findM();
+            if (m.size > 0) { isProcessing = true; comboEl.innerText = "JACKPOT! 🎰"; processM(m); }
+            else { isProcessing = false; comboEl.innerText = ""; }
+        }
+
+        function findM() {
+            let m = new Set();
+            for(let r=0; r<GRID; r++) for(let c=0; c<GRID-2; c++) if(board[r][c].color === board[r][c+1].color && board[r][c].color === board[r][c+2].color) [0,1,2].forEach(i=>m.add(`${r},${c+i}`));
+            for(let c=0; c<GRID; c++) for(let r=0; r<GRID-2; r++) if(board[r][c].color === board[r+1][c].color && board[r][c].color === board[r+2][c].color) [0,1,2].forEach(i=>m.add(`${r+i},${c}`));
+            return m;
+        }
+
+        function processM(m) {
+            score += m.size * 10; scoreEl.innerText = score;
+            m.forEach(p => { const [r,c] = p.split(',').map(Number); for(let i=0; i<8; i++) particles.push(new P(c*TILE+25, r*TILE+25, board[r][c].color)); board[r][c].spin = true; });
+            setTimeout(() => { m.forEach(p => { const [r,c] = p.split(',').map(Number); board[r][c].color = COLORS[Math.floor(Math.random()*6)]; board[r][c].spin = false; }); autoMatch(); }, 600);
+        }
+
+        function draw(r, c, col, s, spin) {
+            const x = c*TILE+25; let y = spin ? r*TILE+25 + Math.sin(Date.now()*0.1)*8 : r*TILE+25;
+            ctx.fillStyle = spin ? COLORS[Math.floor(Math.random()*6)] : col;
+            if(s) { ctx.shadowBlur = 15; ctx.shadowColor = "white"; y -= 5; }
+            ctx.strokeStyle = "black"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(x-10, y-12, 7, 0, 7); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(x+10, y-12, 7, 0, 7); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.rect(x-13, y-5, 26, 24); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(x, y-5, 13, 0, 7); ctx.fill(); ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        function loop() {
+            ctx.clearRect(0,0,400,400);
+            for(let r=0; r<GRID; r++) for(let c=0; c<GRID; c++) draw(r, c, board[r][c].color, selected && selected.r===r && selected.c===c, board[r][c].spin);
+            particles.forEach((p, i) => { p.u(); p.d(); if(p.l<=0) particles.splice(i,1); });
+            requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if(isProcessing) return;
+            const rect = canvas.getBoundingClientRect();
+            const c = Math.floor((e.clientX-rect.left)/TILE), r = Math.floor((e.clientY-rect.top)/TILE);
+            if(selected && Math.abs(r-selected.r)+Math.abs(c-selected.c)===1) {
+                let c1 = board[r][c].color, c2 = board[selected.r][selected.c].color;
+                board[r][c].color = c2; board[selected.r][selected.c].color = c1;
+                if(!findM().size) { board[r][c].color = c1; board[selected.r][selected.c].color = c2; }
+                else autoMatch();
+                selected = null;
+            } else selected = {r, c};
+        });
+
+        initGame(); loop();
+    </script>
+</body>
+</html>
